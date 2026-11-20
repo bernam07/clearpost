@@ -86,12 +86,14 @@ export async function lookupWith17Track(
   };
 
   const payloadItem: Record<string, unknown> = { number: trackingNumber };
-  // Use 17TRACK's own auto-detection for multi-subcarrier groups (DPD/BRT, DHL Express vs eCommerce JJD)
-  const useAutoDetect =
-    !carrierHint || carrierHint === 'unknown' || carrierHint === 'dpd' || carrierHint === 'dhl';
-  const mappedCode = !useAutoDetect ? CARRIER_TO_17TRACK[carrierHint] : undefined;
-  if (mappedCode) {
-    payloadItem.carrier = mappedCode;
+  const isBrt18 = carrierHint === 'dpd' && /^\d{18}$/.test(trackingNumber.trim());
+
+  if (isBrt18) {
+    // 18-digit DPD/BRT Italy numbers require explicit BRT Bartolini code (100026) in 17TRACK
+    payloadItem.carrier = 100026;
+  } else if (carrierHint && carrierHint !== 'unknown' && carrierHint !== 'dhl') {
+    const mappedCode = CARRIER_TO_17TRACK[carrierHint];
+    if (mappedCode) payloadItem.carrier = mappedCode;
   }
 
   // 1. Ensure parcel is registered in 17TRACK (idempotent if already registered)
@@ -101,9 +103,18 @@ export async function lookupWith17Track(
     body: JSON.stringify([payloadItem]),
   });
   const regJson = (await regRes.json().catch(() => null)) as {
-    data?: { accepted?: Array<unknown> };
+    data?: { accepted?: Array<unknown>; rejected?: Array<{ error?: { code?: number } }> };
   } | null;
   const newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
+
+  // If 18-digit BRT was already registered earlier without carrier 100026, update its carrier
+  if (isBrt18 && !newlyRegistered) {
+    await fetch('https://api.17track.net/track/v2.2/changecarrier', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify([{ number: trackingNumber, carrier_new: 100026 }]),
+    }).catch(() => null);
+  }
 
   // If just registered for the first time, give 17TRACK 2.5s to pull initial events from the carrier
   if (newlyRegistered) {
