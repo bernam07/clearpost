@@ -4,7 +4,11 @@
 
 Live app: **[clearpost-pt.web.app](https://clearpost-pt.web.app)**
 
-![ClearPost on iPhone — Google Sign-In and Clear Glass Dashboard](docs/preview-iphone.jpg)
+<p align="center">
+  <img src="docs/iphone-login.jpg" alt="ClearPost iPhone — Google Sign-In" width="280" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/iphone-dashboard.jpg" alt="ClearPost iPhone — Clear Glass Delivery Lens" width="280" />
+</p>
 
 ---
 
@@ -15,9 +19,8 @@ Live app: **[clearpost-pt.web.app](https://clearpost-pt.web.app)**
 - **One-tap clipboard paste:** paste tracking numbers straight from your clipboard on mobile.
 - **Google Sign-In + Cloud Firestore (Firebase Spark — free):** clean initial Google sign-in gate with private per-user real-time sync.
 - **Separate Cloudflare Worker proxy ($0/mo):**
-  - Direct keyless tracking for **DPD** and **InPost** plus parallel auto-detection.
-  - Free **DHL Unified Tracking API** support (250 req/day with a personal `developer.dhl.com` account).
-  - One-tap **Open carrier page** links for CTT, BRT Italy (`mybrt.it`), GLS, UPS, and more.
+  - Full **17TRACK API (v2.2 / v2.4)** integration with verified carrier mappings (CTT, CTT Express, DPD PT/EU, BRT Italy, InPost PT/ES/PL, DHL, GLS, UPS, Correos Express) and webhook endpoint (`POST /api/webhook`).
+  - Direct fallback endpoints for **DPD**, **InPost**, and **DHL**, plus one-tap **Open carrier page** links.
 - **iPhone PWA + Scriptable Widget:** custom Clear Glass home screen icon (`apple-touch-icon.png`) and a lightweight `GET /api/widget` endpoint for iOS Scriptable or Android KWGT widgets.
 
 ---
@@ -69,14 +72,14 @@ npx firebase-tools@latest deploy --only hosting,firestore:rules
 
 ### 2. Separate Proxy (Cloudflare Worker)
 
-Works out of the box with **no API keys** for DPD and InPost. Optionally create a free key at [developer.dhl.com](https://developer.dhl.com/) (*Shipment Tracking - Unified*):
+Deploy the worker and add your free **17TRACK API** key (or optional Ship24 / DHL key):
 
 ```bash
 cd worker
 npm install
 npx wrangler login
 npm run deploy
-npx wrangler secret put DHL_API_KEY   # optional
+npx wrangler secret put SEVENTEENTRACK_API_KEY
 ```
 
 Paste your `.workers.dev` URL in **Settings** inside the PWA (or set `VITE_PROXY_URL` in `.env`).
