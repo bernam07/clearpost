@@ -1,0 +1,12 @@
+name = "clearpost-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-02-14"
+
+[vars]
+ALLOWED_ORIGIN = "*"
+
+# Funciona logo SEM CHAVES para DPD e InPost!
+# Secrets opcionais (`npx wrangler secret put <NOME>`):
+# DHL_API_KEY         -> Grátis com Gmail em developer.dhl.com (250 req/dia, sem cartão)
+# SHIP24_API_KEY      -> Opcional (agregador pago)
+# SEVENTEENTRACK_API_KEY -> Opcional (agregador comercial)

@@ -1,0 +1,15 @@
+{
+  "name": "clearpost-proxy",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261118.1",
+    "typescript": "~5.7.2",
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,73 @@
+/* ClearPost — Architectural Clear Glass Design Tokens */
+
+:root {
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
+  /* Atmosphere canvas — glacier pearl (light) / deep architectural slate (dark) */
+  --canvas: light-dark(#e7eef6, #0c1219);
+  --wash-1: light-dark(rgba(176, 209, 240, 0.78), rgba(29, 78, 124, 0.38));
+  --wash-2: light-dark(rgba(232, 240, 249, 0.92), rgba(22, 54, 78, 0.3));
+  --wash-3: light-dark(rgba(244, 219, 190, 0.42), rgba(154, 96, 32, 0.16));
+
+  /* Clear Glass material hierarchy (Thick Hero > Deck > Thin List) */
+  --glass-hero-bg: light-dark(rgba(255, 255, 255, 0.54), rgba(20, 30, 42, 0.56));
+  --glass-hero-border: light-dark(rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.15));
+  --glass-hero-specular: light-dark(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.18));
+  --glass-hero-sheen: light-dark(rgba(255, 255, 255, 0.52), rgba(132, 192, 245, 0.11));
+  --glass-hero-shadow: light-dark(
+    0 24px 48px -20px rgba(17, 42, 68, 0.18),
+    0 28px 54px -20px rgba(0, 0, 0, 0.58)
+  );
+
+  --glass-deck-bg: light-dark(rgba(255, 255, 255, 0.36), rgba(18, 27, 38, 0.38));
+  --glass-deck-border: light-dark(rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.09));
+
+  --glass-thin-bg: light-dark(rgba(255, 255, 255, 0.34), rgba(18, 26, 36, 0.4));
+  --glass-thin-bg-hover: light-dark(rgba(255, 255, 255, 0.54), rgba(26, 37, 50, 0.56));
+  --glass-thin-border: light-dark(rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.09));
+
+  --glass-input-bg: light-dark(rgba(255, 255, 255, 0.68), rgba(18, 26, 37, 0.72));
+  --glass-dialog-bg: light-dark(rgba(244, 248, 253, 0.88), rgba(16, 23, 33, 0.9));
+  --glass-chip-bg: light-dark(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.08));
+
+  /* Typography */
+  --ink: light-dark(#101923, #eef3f8);
+  --ink-muted: light-dark(#495c6f, #90a4b8);
+  --ink-subtle: light-dark(#667a8e, #6f8499);
+  --divider: light-dark(rgba(16, 25, 35, 0.08), rgba(238, 243, 248, 0.09));
+  --rail-track: light-dark(rgba(16, 25, 35, 0.1), rgba(238, 243, 248, 0.12));
+
+  /* Functional status accents */
+  --status-out: light-dark(#c26f11, #f0a342);
+  --status-out-bg: light-dark(rgba(194, 111, 17, 0.12), rgba(240, 163, 66, 0.16));
+  --status-transit: light-dark(#1a5f96, #64b0ee);
+  --status-transit-bg: light-dark(rgba(26, 95, 150, 0.11), rgba(100, 176, 238, 0.15));
+  --status-delivered: light-dark(#1c7a52, #4ec992);
+  --status-delivered-bg: light-dark(rgba(28, 122, 82, 0.11), rgba(78, 201, 146, 0.15));
+  --status-pending: light-dark(#566778, #94a5b6);
+  --status-pending-bg: light-dark(rgba(86, 103, 120, 0.11), rgba(148, 165, 182, 0.14));
+  --status-error: light-dark(#b43434, #f07575);
+  --status-error-bg: light-dark(rgba(180, 52, 52, 0.11), rgba(240, 117, 117, 0.15));
+
+  /* Action */
+  --accent: light-dark(#164f7d, #6ab4f0);
+  --accent-ink: light-dark(#ffffff, #0a141e);
+  --focus-ring: light-dark(#1a5f96, #7cc0f7);
+
+  /* Fonts */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Intentional radius hierarchy */
+  --radius-hero: 28px;
+  --radius-row: 16px;
+  --radius-pill: 999px;
+}
