@@ -7,33 +7,22 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  min-height: 100%;
+  background-color: var(--canvas-end);
+  background-image:
+    radial-gradient(ellipse 130% 48% at 50% 0%, var(--skylight) 0%, transparent 100%),
+    linear-gradient(180deg, var(--canvas-top) 0%, var(--canvas-mid) 48%, var(--canvas-end) 100%);
+  background-repeat: no-repeat;
 }
 
-html,
 body {
   margin: 0;
-  min-height: 100%;
+  min-height: 100dvh;
   font-family: var(--font-sans);
   color: var(--ink);
-  background-color: var(--canvas);
+  background: transparent;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-/* Silky seamless atmospheric backdrop — oversized blurred field prevents iOS gradient box clipping */
-body::before {
-  content: '';
-  position: fixed;
-  inset: -25vmax;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 22% 18%, var(--orb-1) 0%, transparent 48%),
-    radial-gradient(circle at 82% 28%, var(--orb-2) 0%, transparent 50%),
-    radial-gradient(circle at 68% 82%, var(--orb-3) 0%, transparent 48%),
-    linear-gradient(165deg, var(--canvas) 0%, var(--canvas-end) 100%);
-  filter: blur(48px);
-  transform: translateZ(0);
 }
 
 button,
@@ -51,7 +40,7 @@ select {
 .app-shell {
   width: min(100%, 660px);
   margin-inline: auto;
-  padding: max(22px, env(safe-area-inset-top)) 18px max(56px, env(safe-area-inset-bottom));
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 48px);
   display: flex;
   flex-direction: column;
   gap: 22px;
