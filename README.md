@@ -39,8 +39,8 @@ PWA (Vite + React + TypeScript)
 ## Local Setup
 
 ```bash
-git clone https://github.com/bernam07/clearpost.git
-cd clearpost
+git clone https://github.com/bernam07/ClearPost.git
+cd ClearPost
 npm install
 cp .env.example .env
 ```
