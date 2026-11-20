@@ -41,8 +41,11 @@ const CARRIER_TO_17TRACK: Partial<Record<CarrierId, number>> = {
 const CODE_TO_CARRIER: Record<number, CarrierId> = {
   16041: 'ctt',
   100010: 'dpd',
+  100026: 'dpd', // BRT Italy (DPD Group)
   100226: 'inpost',
   100001: 'dhl',
+  7041: 'dhl',   // DHL Parcel / eCommerce (JJD...)
+  7042: 'dhl',
   100005: 'gls',
   100002: 'ups',
   100112: 'correos',
@@ -83,11 +86,12 @@ export async function lookupWith17Track(
   };
 
   const payloadItem: Record<string, unknown> = { number: trackingNumber };
-  const mappedCode = carrierHint ? CARRIER_TO_17TRACK[carrierHint] : undefined;
+  // Use 17TRACK's own auto-detection for multi-subcarrier groups (DPD/BRT, DHL Express vs eCommerce JJD)
+  const useAutoDetect =
+    !carrierHint || carrierHint === 'unknown' || carrierHint === 'dpd' || carrierHint === 'dhl';
+  const mappedCode = !useAutoDetect ? CARRIER_TO_17TRACK[carrierHint] : undefined;
   if (mappedCode) {
     payloadItem.carrier = mappedCode;
-  } else {
-    payloadItem.auto_detection = true;
   }
 
   // 1. Ensure parcel is registered in 17TRACK (idempotent if already registered)

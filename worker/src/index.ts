@@ -75,7 +75,24 @@ export default {
           : detectCarrierServer(trackingNumber);
 
       try {
-        // 1. Free direct public APIs first (zero cost, no paid aggregator needed!)
+        // 1. If a multi-carrier aggregator key (17TRACK or Ship24) is configured, prefer it first!
+        if (env.SEVENTEENTRACK_API_KEY) {
+          return jsonResponse(
+            await lookupWith17Track(env.SEVENTEENTRACK_API_KEY, trackingNumber, carrier),
+            env,
+            200,
+          );
+        }
+
+        if (env.SHIP24_API_KEY) {
+          return jsonResponse(
+            await lookupWithShip24(env.SHIP24_API_KEY, trackingNumber, carrier),
+            env,
+            200,
+          );
+        }
+
+        // 2. Otherwise try free direct public APIs
         if (carrier === 'dpd') {
           return jsonResponse(await lookupDirectDPD(trackingNumber), env, 200);
         }
@@ -88,29 +105,11 @@ export default {
           return jsonResponse(await lookupDirectDHL(env.DHL_API_KEY, trackingNumber), env, 200);
         }
 
-        // 1b. If carrier is unknown/ambiguous, probe free carrier APIs in parallel
         if (carrier === 'unknown') {
           const probed = await probeFreeCarriers(trackingNumber, env.DHL_API_KEY);
           if (probed) {
             return jsonResponse(probed, env, 200);
           }
-        }
-
-        // 2. Optional multi-carrier aggregator if configured
-        if (env.SHIP24_API_KEY) {
-          return jsonResponse(
-            await lookupWithShip24(env.SHIP24_API_KEY, trackingNumber, carrier),
-            env,
-            200,
-          );
-        }
-
-        if (env.SEVENTEENTRACK_API_KEY) {
-          return jsonResponse(
-            await lookupWith17Track(env.SEVENTEENTRACK_API_KEY, trackingNumber, carrier),
-            env,
-            200,
-          );
         }
 
         // 3. Honest fallback for carriers without an open public API (e.g. CTT)
