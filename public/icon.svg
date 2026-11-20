@@ -1,23 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
   <defs>
-    <linearGradient id="bg" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#f2f7fc" />
-      <stop offset="100%" stop-color="#cfe0f2" />
+    <linearGradient id="bg" x1="12" y1="6" x2="116" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f4f8fd" />
+      <stop offset="100%" stop-color="#c9ddf1" />
     </linearGradient>
-    <linearGradient id="glass" x1="28" y1="24" x2="100" y2="104" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.88" />
-      <stop offset="100%" stop-color="#d8e7f6" stop-opacity="0.45" />
+    <linearGradient id="topFace" x1="64" y1="22" x2="64" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.96" />
+      <stop offset="100%" stop-color="#e3effa" stop-opacity="0.7" />
+    </linearGradient>
+    <linearGradient id="leftFace" x1="26" y1="44" x2="64" y2="106" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.72" />
+      <stop offset="100%" stop-color="#bcd4ec" stop-opacity="0.45" />
+    </linearGradient>
+    <linearGradient id="rightFace" x1="102" y1="44" x2="64" y2="106" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d7e7f7" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#9cbde0" stop-opacity="0.52" />
     </linearGradient>
   </defs>
-  <rect width="128" height="128" rx="30" fill="url(#bg)" />
+  <rect width="128" height="128" rx="28" fill="url(#bg)" />
+  <polygon points="64,22 102,44 64,66 26,44" fill="url(#topFace)" />
+  <polygon points="26,44 64,66 64,106 26,84" fill="url(#leftFace)" />
+  <polygon points="102,44 64,66 64,106 102,84" fill="url(#rightFace)" />
   <path
-    d="M64 24L100 44V84L64 104L28 84V44L64 24Z"
-    fill="url(#glass)"
-    stroke="#1a5f96"
-    stroke-width="3.5"
+    d="M64 22L102 44V84L64 106L26 84V44L64 22Z"
+    stroke="#164f7d"
+    stroke-width="3"
     stroke-linejoin="round"
   />
-  <path d="M28 44L64 64L100 44" stroke="#1a5f96" stroke-width="3.5" stroke-linejoin="round" />
-  <path d="M64 64V104" stroke="#1a5f96" stroke-width="3.5" stroke-linecap="round" />
-  <circle cx="64" cy="44" r="5" fill="#c26f11" />
+  <path d="M26 44L64 66L102 44" stroke="#164f7d" stroke-width="2.6" stroke-linejoin="round" />
+  <path d="M64 66V106" stroke="#164f7d" stroke-width="2.6" stroke-linecap="round" />
+  <path d="M64 23.5L100 44" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.85" />
+  <circle cx="64" cy="44" r="7.5" fill="#d47a12" fill-opacity="0.22" />
+  <circle cx="64" cy="44" r="4.5" fill="#d47a12" />
 </svg>

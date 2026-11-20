@@ -54,30 +54,24 @@ export async function fetchTrackingUpdate(
     });
 
     if (!response.ok) {
-      throw new Error(`O proxy devolveu erro ${response.status}. Verifica o URL ou a chave da API no Worker.`);
+      throw new Error(`Proxy returned HTTP ${response.status}. Check your Worker URL or API key.`);
     }
 
     const data = (await response.json()) as Omit<TrackingLookupResult, 'source'>;
     return { ...data, source: 'proxy' };
   }
 
-  // Graceful preview mode before the Cloudflare Worker proxy is deployed
   const detected = carrierHint === 'unknown' ? detectCarrier(trackingNumber) : carrierHint;
-  const eta = new Date();
-  eta.setDate(eta.getDate() + 2);
-  eta.setHours(15, 0, 0, 0);
-
   return {
     carrier: detected,
-    status: 'in_transit',
-    etaIso: eta.toISOString(),
-    etaWindow: '09:00 – 18:00',
-    lastLocation: 'Centro de triagem (modo demonstração)',
+    status: 'pending',
+    etaIso: null,
+    etaWindow: null,
+    lastLocation: 'Connect your Cloudflare Worker proxy in Settings for live tracking',
     events: [
       {
         timestamp: new Date().toISOString(),
-        description: 'Encomenda adicionada em modo demonstração — liga o proxy Cloudflare nas Definições para dados reais',
-        location: 'Lisboa',
+        description: 'Parcel saved locally. Add your proxy URL in Settings to fetch live updates.',
       },
     ],
     source: 'local-preview',

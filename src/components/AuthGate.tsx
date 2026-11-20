@@ -26,9 +26,9 @@ export function AuthGate({ onContinueLocal }: AuthGateProps) {
     } catch (err) {
       const code = (err as { code?: string })?.code;
       if (code === 'auth/popup-closed-by-user') {
-        setError('A janela de autenticação foi fechada antes de concluir.');
+        setError('Sign-in window closed before completing.');
       } else {
-        setError('Não foi possível iniciar sessão com Google. Tenta novamente.');
+        setError('Unable to sign in with Google. Please try again.');
       }
     } finally {
       setBusy(false);
@@ -49,14 +49,14 @@ export function AuthGate({ onContinueLocal }: AuthGateProps) {
 
         <div className="auth-copy">
           <h1 id="auth-heading" className="auth-title">
-            As tuas encomendas, num só vidro.
+            All your parcels, through clear glass.
           </h1>
           <p className="auth-subtitle">
-            Acompanha CTT, DPD, InPost, DHL e outras num painel limpo, sincronizado entre telemóvel e computador.
+            Track CTT, DPD, InPost, DHL, and more in one calm view, synced across phone and desktop.
           </p>
         </div>
 
-        <ul className="auth-carriers" aria-label="Transportadoras suportadas">
+        <ul className="auth-carriers" aria-label="Supported carriers">
           <li>CTT</li>
           <li>DPD / BRT</li>
           <li>InPost</li>
@@ -90,12 +90,12 @@ export function AuthGate({ onContinueLocal }: AuthGateProps) {
                 d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59A8.96 8.96 0 0 0 9 0 9 9 0 0 0 .96 4.96l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"
               />
             </svg>
-            <span>{busy ? 'A iniciar sessão...' : 'Continuar com Google'}</span>
+            <span>{busy ? 'Signing in...' : 'Continue with Google'}</span>
           </button>
 
           {!isFirebaseConfigured && onContinueLocal && (
             <button type="button" className="ghost-btn" onClick={onContinueLocal}>
-              Continuar em modo local (Firebase sem .env)
+              Continue in local mode (no Firebase .env)
             </button>
           )}
         </div>
@@ -107,7 +107,7 @@ export function AuthGate({ onContinueLocal }: AuthGateProps) {
         )}
 
         <p className="auth-footnote">
-          Os teus códigos ficam privados na tua conta Firebase. Sem anúncios nem partilha de dados.
+          Your tracking numbers stay private in your Firebase account. No ads, no data sharing.
         </p>
       </section>
     </main>

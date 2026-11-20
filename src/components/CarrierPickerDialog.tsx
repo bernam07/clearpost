@@ -64,14 +64,14 @@ export function CarrierPickerDialog({
     >
       <div className="dialog-inner">
         <div className="dialog-header">
-          <h2 id="carrier-picker-title">Escolher transportadora</h2>
+          <h2 id="carrier-picker-title">Choose carrier</h2>
           <button type="button" className="ghost-btn" onClick={() => dialogRef.current?.close()}>
-            Cancelar
+            Cancel
           </button>
         </div>
 
         <p className="dialog-help">
-          O código <span className="tracking-code">{trackingNumber}</span> coincide com mais do que uma transportadora. Qual pretendes usar?
+          Tracking number <span className="tracking-code">{trackingNumber}</span> matches more than one carrier. Which one should we use?
         </p>
 
         <div className="carrier-choices">
@@ -93,7 +93,7 @@ export function CarrierPickerDialog({
 
         {otherOptions.length > 0 && (
           <details className="other-carriers">
-            <summary className="other-carriers-summary">Outras transportadoras</summary>
+            <summary className="other-carriers-summary">Other carriers</summary>
             <div className="carrier-choices" style={{ marginTop: 8 }}>
               {otherOptions.map((c) => (
                 <button

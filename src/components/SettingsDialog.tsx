@@ -23,7 +23,6 @@ export function SettingsDialog({ open, user, onClose, onSaved }: SettingsDialogP
   const [proxyInput, setProxyInput] = useState(() => getProxyUrl());
   const [authBusy, setAuthBusy] = useState(false);
 
-  // Open/close native modal dialog via showModal()
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -36,7 +35,7 @@ export function SettingsDialog({ open, user, onClose, onSaved }: SettingsDialogP
     }
   }, [open]);
 
-  // Fallback for browsers without <dialog closedby="any"> support (e.g., Safari)
+  // Fallback for browsers without <dialog closedby="any"> support (e.g. Safari)
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || 'closedBy' in HTMLDialogElement.prototype) return;
@@ -59,7 +58,6 @@ export function SettingsDialog({ open, user, onClose, onSaved }: SettingsDialogP
     return () => dialog.removeEventListener('click', handleBackdropClick);
   }, []);
 
-  // Keep theme state synced across tabs
   useEffect(() => {
     return subscribeThemeStorage(setTheme);
   }, []);
@@ -71,16 +69,16 @@ export function SettingsDialog({ open, user, onClose, onSaved }: SettingsDialogP
 
   function handleSaveProxy() {
     setProxyUrl(proxyInput);
-    onSaved(proxyInput.trim() ? 'URL do proxy guardado.' : 'Proxy limpo (modo demonstração).');
+    onSaved(proxyInput.trim() ? 'Proxy URL saved.' : 'Proxy URL cleared.');
   }
 
   async function handleGoogleSignIn() {
     setAuthBusy(true);
     try {
       await signInWithGoogle();
-      onSaved('Sessão Google iniciada.');
+      onSaved('Signed in with Google.');
     } catch {
-      onSaved('Não foi possível iniciar sessão com Google.');
+      onSaved('Could not sign in with Google.');
     } finally {
       setAuthBusy(false);
     }
@@ -90,22 +88,23 @@ export function SettingsDialog({ open, user, onClose, onSaved }: SettingsDialogP
     setAuthBusy(true);
     try {
       await signOutUser();
-      onSaved('Sessão terminada.');
+      onSaved('Signed out.');
     } finally {
       setAuthBusy(false);
     }
   }
 
-  const effectiveProxy = proxyInput.trim().replace(/\/+$/, '') || 'https://clearpost-proxy.<teu-subdominio>.workers.dev';
-  const scriptableSnippet = `// Scriptable (iOS) — Widget ClearPost
+  const effectiveProxy =
+    proxyInput.trim().replace(/\/+$/, '') || 'https://clearpost-proxy.<your-subdomain>.workers.dev';
+  const scriptableSnippet = `// Scriptable (iOS) — ClearPost Widget
 const url = "${effectiveProxy}/api/widget";
 const data = await new Request(url).loadJSON();
 const w = new ListWidget();
 w.backgroundColor = new Color("#e7eef6", 0.72);
-const t = w.addText(data.next?.etaHeadline ?? "Sem entregas hoje");
+const t = w.addText(data.next?.etaHeadline ?? "No deliveries today");
 t.font = Font.boldSystemFont(16);
 w.addSpacer(4);
-const sub = w.addText(data.next?.label ?? "Tudo entregue");
+const sub = w.addText(data.next?.label ?? "All caught up");
 sub.font = Font.systemFont(13);
 Script.setWidget(w);
 Script.complete();`;
@@ -120,84 +119,84 @@ Script.complete();`;
     >
       <div className="dialog-inner">
         <div className="dialog-header">
-          <h2 id="settings-title">Definições e widget</h2>
+          <h2 id="settings-title">Settings & widget</h2>
           <button type="button" className="ghost-btn" onClick={() => dialogRef.current?.close()}>
-            Fechar
+            Close
           </button>
         </div>
 
         <section className="dialog-section">
-          <h3>Aspeto</h3>
-          <div className="segmented" role="group" aria-label="Escolher tema">
+          <h3>Appearance</h3>
+          <div className="segmented" role="group" aria-label="Choose theme">
             <button
               type="button"
               aria-pressed={theme === 'system'}
               onClick={() => handleThemeChange('system')}
             >
-              Sistema ({getSystemThemeLabel()})
+              System ({getSystemThemeLabel()})
             </button>
             <button
               type="button"
               aria-pressed={theme === 'light'}
               onClick={() => handleThemeChange('light')}
             >
-              Claro
+              Light
             </button>
             <button
               type="button"
               aria-pressed={theme === 'dark'}
               onClick={() => handleThemeChange('dark')}
             >
-              Escuro
+              Dark
             </button>
           </div>
         </section>
 
         <section className="dialog-section">
-          <h3>Proxy de tracking (Cloudflare Worker)</h3>
+          <h3>Tracking proxy (Cloudflare Worker)</h3>
           <p className="dialog-help">
-            Indica o endereço do teu Worker para consultar CTT, DPD, InPost e outras via Ship24 sem expor a chave API.
+            Enter your Worker URL to query DPD, InPost, and DHL live without exposing API keys.
           </p>
           <input
             className="field-input"
             type="url"
             value={proxyInput}
             onChange={(e) => setProxyInput(e.target.value)}
-            placeholder="https://clearpost-proxy.teu-user.workers.dev"
+            placeholder="https://clearpost-proxy.your-name.workers.dev"
           />
           <div>
             <button type="button" className="add-submit" onClick={handleSaveProxy}>
-              Guardar proxy
+              Save proxy
             </button>
           </div>
         </section>
 
         <section className="dialog-section">
-          <h3>Sincronização Firebase (Spark)</h3>
+          <h3>Firebase sync (Spark)</h3>
           {!isFirebaseConfigured ? (
             <p className="dialog-help">
-              Firebase ainda não configurado neste ambiente. Preenche o ficheiro <code>.env</code> com as chaves da tua Web App no Firebase Console para sincronizar entre dispositivos.
+              Firebase is not configured in this environment. Copy <code>.env.example</code> to <code>.env</code> with your Firebase Web App keys to sync across devices.
             </p>
           ) : user ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-              <span className="dialog-help">Sessão ativa: {user.email ?? user.displayName}</span>
+              <span className="dialog-help">Signed in as {user.email ?? user.displayName}</span>
               <button type="button" className="ghost-btn" disabled={authBusy} onClick={handleSignOut}>
-                Terminar sessão
+                Sign out
               </button>
             </div>
           ) : (
             <div>
               <button type="button" className="add-submit" disabled={authBusy} onClick={handleGoogleSignIn}>
-                Entrar com Google
+                Sign in with Google
               </button>
             </div>
           )}
         </section>
 
         <section className="dialog-section">
-          <h3>Widget no ecrã inicial (Scriptable / KWGT)</h3>
+          <h3>Home screen widget (Scriptable / KWGT)</h3>
           <p className="dialog-help">
-            O teu Worker expõe <code>GET /api/widget</code> com a próxima entrega. No iOS podes colar este snippet no Scriptable:
+            Your Worker exposes <code>GET /api/widget</code> with your next arrival. On iOS, paste this snippet into Scriptable:
           </p>
           <pre className="code-block">{scriptableSnippet}</pre>
         </section>

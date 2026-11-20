@@ -1,40 +1,42 @@
 # ClearPost
 
-**Acompanha encomendas CTT, DPD / BRT, InPost, DHL, GLS, UPS e Correos Express numa PWA em estilo Clear Glass.**
+**Track CTT, DPD / BRT, InPost, DHL, GLS, UPS, and Correos Express parcels in a Clear Glass PWA.**
 
-![ClearPost em iPhone — Login Google e Painel Clear Glass](docs/preview-iphone.jpg)
+Live app: **[clearpost-pt.web.app](https://clearpost-pt.web.app)**
 
----
-
-## Funcionalidades
-
-- **Design Clear Glass (Claro e Escuro automático):** interface translúcida com hierarquia real de espessura de vidro, *Delivery Lens* com reflexo especular subtil e trilho ótico de estado da entrega.
-- **Deteção automática de transportadora + seletor de ambiguidade:** reconhece códigos CTT, DPD, BRT Itália (18 dígitos), InPost, DHL, GLS, UPS e Correos Express; quando o número de dígitos coincide com várias transportadoras, abre um popup nativo para escolher.
-- **Colar em 1 toque:** botão direto para colar códigos da área de transferência no telemóvel.
-- **Autenticação Google + Firestore (Firebase Spark — gratuito):** ecrã inicial de login com Google e sincronização em tempo real privada por utilizador.
-- **Proxy separado em Cloudflare Worker (0 €):**
-  - Consulta direta **sem chave API** para **DPD** e **InPost** + sondagem automática.
-  - Suporte gratuito a **DHL Unified Tracking API** (250 req/dia com conta pessoal em `developer.dhl.com`).
-  - Link direto **Abrir na transportadora** para CTT, BRT Itália (`mybrt.it`), GLS, UPS e restantes.
-- **Pronta para iPhone (PWA) + Widget Scriptable:** instalável no ecrã inicial (*Partilhar → Adicionar ao ecrã principal*) e endpoint `GET /api/widget` para widgets nativos no iOS (Scriptable) ou Android (KWGT).
+![ClearPost on iPhone — Google Sign-In and Clear Glass Dashboard](docs/preview-iphone.jpg)
 
 ---
 
-## Arquitetura
+## Features
+
+- **Clear Glass interface (Light & Dark automatic):** layered translucent panes with specular edge highlights, an optical **Delivery Lens** hero widget, and a continuous light-rail delivery progress track.
+- **Automatic carrier detection + ambiguity picker:** recognizes CTT, DPD, BRT Italy (18 digits), InPost, DHL, GLS, UPS, and Correos Express formats; when a digit length matches multiple carriers, a native Clear Glass dialog lets you choose the right one.
+- **One-tap clipboard paste:** paste tracking numbers straight from your clipboard on mobile.
+- **Google Sign-In + Cloud Firestore (Firebase Spark — free):** clean initial Google sign-in gate with private per-user real-time sync.
+- **Separate Cloudflare Worker proxy ($0/mo):**
+  - Direct keyless tracking for **DPD** and **InPost** plus parallel auto-detection.
+  - Free **DHL Unified Tracking API** support (250 req/day with a personal `developer.dhl.com` account).
+  - One-tap **Open carrier page** links for CTT, BRT Italy (`mybrt.it`), GLS, UPS, and more.
+- **iPhone PWA + Scriptable Widget:** custom Clear Glass home screen icon (`apple-touch-icon.png`) and a lightweight `GET /api/widget` endpoint for iOS Scriptable or Android KWGT widgets.
+
+---
+
+## Architecture
 
 ```text
 PWA (Vite + React + TypeScript)
- ├── Firebase Auth (Google) + Cloud Firestore (regras por utilizador)
- ├── Firebase Hosting (HTTPS + headers de segurança)
+ ├── Firebase Auth (Google) + Cloud Firestore (per-user security rules)
+ ├── Firebase Hosting (HTTPS + HTTP security headers)
  └── Cloudflare Worker Proxy (worker/)
-      ├── DPD / InPost (APIs públicas gratuitas)
-      ├── DHL Unified API (opcional, chave gratuita)
-      └── GET /api/widget (JSON leve para Scriptable / KWGT)
+      ├── DPD / InPost (free public endpoints)
+      ├── DHL Unified API (optional free key)
+      └── GET /api/widget (lightweight JSON for Scriptable / KWGT)
 ```
 
 ---
 
-## Instalação local
+## Local Setup
 
 ```bash
 git clone https://github.com/bernam07/clearpost.git
@@ -43,7 +45,7 @@ npm install
 cp .env.example .env
 ```
 
-Preenche o `.env` com a configuração da tua Web App no [Firebase Console](https://console.firebase.google.com/) e arranca em desenvolvimento:
+Fill `.env` with your Firebase Web App config from the [Firebase Console](https://console.firebase.google.com/), then start the dev server:
 
 ```bash
 npm run dev
@@ -51,12 +53,12 @@ npm run dev
 
 ---
 
-## Deploy (100% gratuito)
+## Free Deployment
 
-### 1. Firebase (Plano Spark)
+### 1. Firebase (Spark Plan)
 
-1. Ativa **Authentication → Google** e **Cloud Firestore** no Firebase Console.
-2. Publica as regras de segurança e a PWA:
+1. Enable **Authentication → Google** and **Cloud Firestore** in the Firebase Console.
+2. Build and deploy:
 
 ```bash
 npm run build
@@ -65,34 +67,33 @@ npx firebase-tools@latest use --add
 npx firebase-tools@latest deploy --only hosting,firestore:rules
 ```
 
-### 2. Proxy separado (Cloudflare Worker)
+### 2. Separate Proxy (Cloudflare Worker)
 
-Funciona logo **sem chaves** para DPD e InPost. Opcionalmente, cria uma chave gratuita em [developer.dhl.com](https://developer.dhl.com/) (*Shipment Tracking - Unified*):
+Works out of the box with **no API keys** for DPD and InPost. Optionally create a free key at [developer.dhl.com](https://developer.dhl.com/) (*Shipment Tracking - Unified*):
 
 ```bash
 cd worker
 npm install
 npx wrangler login
 npm run deploy
-npx wrangler secret put DHL_API_KEY   # opcional
+npx wrangler secret put DHL_API_KEY   # optional
 ```
 
-Cola o URL `.workers.dev` em **Definições** dentro da PWA (ou em `VITE_PROXY_URL` no `.env`).
+Paste your `.workers.dev` URL in **Settings** inside the PWA (or set `VITE_PROXY_URL` in `.env`).
 
 ---
 
-## Instalar no iPhone (PWA)
+## Install on iPhone (PWA)
 
-1. Abre o URL do teu Firebase Hosting (`https://<project-id>.web.app`) no **Safari**.
-2. Toca no ícone **Partilhar** → **Adicionar ao ecrã principal**.
-3. Abre a **ClearPost** a partir do ecrã inicial e inicia sessão com a tua conta Google.
+1. Open **[clearpost-pt.web.app](https://clearpost-pt.web.app)** in **Safari**.
+2. Tap **Share** → **Add to Home Screen**.
+3. Launch **ClearPost** from your Home Screen and sign in with Google.
 
 ---
 
-## Segurança
+## Security
 
-- **Zero segredos no repositório:** `.env`, `.firebaserc`, `worker/.dev.vars` e credenciais locais estão bloqueados no `.gitignore`.
-- **Firestore estritamente privado por utilizador** (`firestore.rules`): apenas `request.auth.uid == userId` tem acesso às suas encomendas, com validação de schema (`hasOnly`), limites de tamanho e `createdAt` imutável.
-- **Validação estrita no Worker:** apenas códigos alfanuméricos válidos (`^[A-Za-z0-9_-]{4,64}$`), headers `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`.
-- **Headers HTTP de segurança** configurados no `firebase.json` (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`).
-- **Recomendações para produção:** atualiza `ALLOWED_ORIGIN` em `worker/wrangler.toml` para o teu domínio `https://<project-id>.web.app` em vez de `*`.
+- **Zero secrets in Git:** `.env`, `.firebaserc`, `worker/.dev.vars`, and local credential files are blocked in `.gitignore`.
+- **Strict per-user Firestore rules (`firestore.rules`):** default-deny everywhere; only `request.auth.uid == userId` can read/write their parcels, with strict `hasOnly` field validation, size caps, and immutable `createdAt`.
+- **Hardened Worker & Hosting:** strict `^[A-Za-z0-9_-]{4,64}$` tracking number validation, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and `Permissions-Policy`.
+- **Production tip:** set `ALLOWED_ORIGIN` in `worker/wrangler.toml` to your exact Firebase Hosting origin (`https://<project-id>.web.app`).

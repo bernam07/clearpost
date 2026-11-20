@@ -23,19 +23,19 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
 
   async function handlePaste() {
     if (!navigator.clipboard?.readText) {
-      onNotify('Cola diretamente no campo de texto.');
+      onNotify('Paste directly into the input field.');
       return;
     }
     try {
       const text = (await navigator.clipboard.readText()).trim();
       if (!text) {
-        onNotify('A área de transferência está vazia.');
+        onNotify('Clipboard is empty.');
         return;
       }
       setCode(text);
       setManualCarrier(null);
     } catch {
-      onNotify('Permite o acesso à área de transferência ou cola manualmente.');
+      onNotify('Allow clipboard access or paste manually.');
     }
   }
 
@@ -68,20 +68,20 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
             setCode(e.target.value);
             if (!e.target.value.trim()) setManualCarrier(null);
           }}
-          placeholder="Colar código CTT, DPD, InPost, DHL..."
-          aria-label="Código de tracking da encomenda"
+          placeholder="Paste CTT, DPD, InPost, DHL code..."
+          aria-label="Parcel tracking number"
           autoComplete="off"
           spellCheck={false}
         />
 
         {!trimmed && (
           <button type="button" className="paste-btn" onClick={handlePaste}>
-            Colar
+            Paste
           </button>
         )}
 
         <button className="add-submit" type="submit" disabled={!trimmed || busy}>
-          {busy ? 'A seguir...' : 'Seguir'}
+          {busy ? 'Tracking...' : 'Track'}
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
           <span className="detected-carrier">
             <span className="carrier-dot" style={{ backgroundColor: carrierMeta.color }} />
             <label htmlFor="carrier-override" style={{ color: 'var(--ink-muted)' }}>
-              {isAmbiguous ? 'Várias opções:' : 'Transportadora:'}
+              {isAmbiguous ? 'Multiple matches:' : 'Carrier:'}
             </label>
             <select
               id="carrier-override"
@@ -101,13 +101,13 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
                 setManualCarrier(val === 'unknown' ? null : val);
               }}
             >
-              {isAmbiguous && <option value="unknown">Escolher ao seguir…</option>}
+              {isAmbiguous && <option value="unknown">Choose on submit…</option>}
               {CARRIER_LIST.filter((c) => c.id !== 'unknown').map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
-              {!isAmbiguous && <option value="unknown">Outra transportadora</option>}
+              {!isAmbiguous && <option value="unknown">Other carrier</option>}
             </select>
           </span>
 
@@ -116,8 +116,8 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder="Nome opcional (ex: Teclado, Sapatilhas)"
-            aria-label="Nome opcional da encomenda"
+            placeholder="Optional label (e.g. Keyboard, Sneakers)"
+            aria-label="Optional parcel label"
             maxLength={100}
           />
         </div>

@@ -6,7 +6,7 @@ interface ArrivingWidgetProps {
   parcels: Parcel[];
 }
 
-const STEPS = ['Registada', 'Em trânsito', 'Distribuição', 'Entregue'] as const;
+const STEPS = ['Registered', 'In transit', 'Out for delivery', 'Delivered'] as const;
 
 function routeProgress(status: ParcelStatus): { percent: number; stepIndex: number; colorVar: string } {
   switch (status) {
@@ -56,14 +56,14 @@ export function ArrivingWidget({ parcels }: ArrivingWidgetProps) {
 
       <section
         className="hero-widget"
-        aria-label="Encomenda a chegar"
+        aria-label="Arriving parcel"
         onPointerMove={handlePointerMove}
       >
         <div className="hero-top">
           <div>
             <h2 className="hero-eta">{etaHeadline}</h2>
             <p className="hero-window">
-              {current.etaWindow ? `Janela estimada ${current.etaWindow}` : statusLabel(current.status)}
+              {current.etaWindow ? `Estimated window ${current.etaWindow}` : statusLabel(current.status)}
             </p>
           </div>
 
@@ -74,14 +74,14 @@ export function ArrivingWidget({ parcels }: ArrivingWidgetProps) {
         </div>
 
         <div className="hero-subject">
-          <p className="hero-label">{current.label || 'Encomenda sem nome'}</p>
+          <p className="hero-label">{current.label || 'Untitled parcel'}</p>
           <span className="tracking-code">{current.trackingNumber}</span>
         </div>
 
         <div
           className="optical-rail"
           style={{ '--rail-color': progress.colorVar } as CSSProperties}
-          aria-label={`Estado atual: ${statusLabel(current.status)}`}
+          aria-label={`Current status: ${statusLabel(current.status)}`}
         >
           <div className="rail-track-wrap" aria-hidden="true">
             <div className="rail-base">
@@ -101,15 +101,15 @@ export function ArrivingWidget({ parcels }: ArrivingWidgetProps) {
 
         <div className="hero-footer">
           <span className="hero-location">
-            {current.lastLocation || 'A aguardar primeira leitura da transportadora'}
+            {current.lastLocation || 'Waiting for first carrier scan'}
           </span>
 
           {hasMultiple && (
-            <div className="hero-nav" role="group" aria-label="Alternar encomenda em destaque">
+            <div className="hero-nav" role="group" aria-label="Switch featured parcel">
               <button
                 type="button"
                 className="hero-nav-btn"
-                aria-label="Encomenda anterior"
+                aria-label="Previous parcel"
                 onClick={() => stepBy(-1)}
               >
                 ‹
@@ -120,7 +120,7 @@ export function ArrivingWidget({ parcels }: ArrivingWidgetProps) {
               <button
                 type="button"
                 className="hero-nav-btn"
-                aria-label="Próxima encomenda"
+                aria-label="Next parcel"
                 onClick={() => stepBy(1)}
               >
                 ›

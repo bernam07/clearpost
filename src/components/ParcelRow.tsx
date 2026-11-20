@@ -60,14 +60,14 @@ export function ParcelRow({
               target="_blank"
               rel="noreferrer"
             >
-              Abrir na transportadora
+              Open carrier page
             </a>
             <button
               type="button"
               className="ghost-btn"
               onClick={() => onCopy(parcel.trackingNumber)}
             >
-              Copiar código
+              Copy code
             </button>
             <button
               type="button"
@@ -75,21 +75,21 @@ export function ParcelRow({
               disabled={refreshing}
               onClick={() => onRefresh(parcel)}
             >
-              {refreshing ? 'A atualizar...' : 'Atualizar'}
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
             <button
               type="button"
               className="ghost-btn"
               onClick={() => onToggleDelivered(parcel)}
             >
-              {parcel.status === 'delivered' ? 'Reabrir' : 'Marcar entregue'}
+              {parcel.status === 'delivered' ? 'Reopen' : 'Mark delivered'}
             </button>
             <button
               type="button"
               className="ghost-btn danger"
               onClick={() => onDelete(parcel.id)}
             >
-              Remover
+              Remove
             </button>
           </div>
         </div>
@@ -107,7 +107,7 @@ export function ParcelRow({
             ))}
           </ol>
         ) : (
-          <p className="dialog-help">Ainda sem eventos registados pela transportadora.</p>
+          <p className="dialog-help">No tracking events reported by the carrier yet.</p>
         )}
       </div>
     </details>

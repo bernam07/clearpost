@@ -33,7 +33,7 @@ export function applyThemePreference(pref: ThemePreference): void {
 
 export function getSystemThemeLabel(): string {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return isDark ? 'escuro' : 'claro';
+  return isDark ? 'dark' : 'light';
 }
 
 export function subscribeThemeStorage(onChange: (pref: ThemePreference) => void): () => void {

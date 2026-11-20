@@ -75,7 +75,7 @@ export function App() {
       return subscribeUserParcels(
         user.uid,
         (remoteParcels) => setParcels(remoteParcels),
-        () => showToast('Erro ao sincronizar com o Firestore.'),
+        () => showToast('Failed to sync with Firestore.'),
       );
     }
     if (localMode) {
@@ -113,7 +113,7 @@ export function App() {
         id: crypto.randomUUID(),
         trackingNumber,
         carrier: result.carrier !== 'unknown' ? result.carrier : carrier,
-        label: label || `Encomenda ${trackingNumber.slice(-5)}`,
+        label: label || `Parcel ${trackingNumber.slice(-5)}`,
         status: result.status,
         etaIso: result.etaIso,
         etaWindow: result.etaWindow,
@@ -125,11 +125,11 @@ export function App() {
       await persistParcel(parcel);
       showToast(
         result.source === 'proxy'
-          ? 'Encomenda adicionada e atualizada.'
-          : 'Encomenda guardada (liga o proxy nas Definições para consulta em tempo real).',
+          ? 'Parcel added and updated.'
+          : 'Parcel saved. Add your proxy URL in Settings for live tracking.',
       );
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Não foi possível consultar o código.');
+      showToast(err instanceof Error ? err.message : 'Could not look up tracking number.');
     } finally {
       setAdding(false);
     }
@@ -157,9 +157,9 @@ export function App() {
         updatedAt: new Date().toISOString(),
       };
       await persistParcel(updated);
-      showToast('Estado atualizado.');
+      showToast('Status updated.');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Falha ao atualizar.');
+      showToast(err instanceof Error ? err.message : 'Refresh failed.');
     } finally {
       setRefreshingId(null);
     }
@@ -194,8 +194,8 @@ export function App() {
     setRefreshingAll(false);
     showToast(
       updatedCount > 0
-        ? `${updatedCount} ${updatedCount === 1 ? 'encomenda atualizada' : 'encomendas atualizadas'}.`
-        : 'Não foi possível atualizar as encomendas.',
+        ? `Updated ${updatedCount} ${updatedCount === 1 ? 'parcel' : 'parcels'}.`
+        : 'Could not refresh parcels.',
     );
   }
 
@@ -208,12 +208,12 @@ export function App() {
       updatedAt: now,
       events: nextDelivered
         ? [
-            { timestamp: now, description: 'Marcada como entregue manualmente' },
+            { timestamp: now, description: 'Marked as delivered manually' },
             ...parcel.events,
           ]
         : parcel.events,
     });
-    showToast(nextDelivered ? 'Marcada como entregue.' : 'Encomenda reaberta.');
+    showToast(nextDelivered ? 'Marked as delivered.' : 'Parcel reopened.');
   }
 
   async function handleDeleteParcel(id: string) {
@@ -222,15 +222,15 @@ export function App() {
     } else {
       setParcels((prev) => prev.filter((p) => p.id !== id));
     }
-    showToast('Encomenda removida.');
+    showToast('Parcel removed.');
   }
 
   async function handleCopyCode(code: string) {
     try {
       await navigator.clipboard.writeText(code);
-      showToast('Código copiado.');
+      showToast('Tracking number copied.');
     } catch {
-      showToast('Não foi possível copiar o código.');
+      showToast('Could not copy tracking number.');
     }
   }
 
@@ -259,7 +259,7 @@ export function App() {
       <main className="auth-stage">
         <div className="auth-loading" role="status" aria-live="polite">
           <img src="/icon.svg" alt="" width={36} height={36} />
-          <span>A verificar sessão…</span>
+          <span>Checking session…</span>
         </div>
       </main>
     );
@@ -281,7 +281,7 @@ export function App() {
           <div>
             <h1 className="brand-name">ClearPost</h1>
             <span className="brand-sync">
-              {user ? user.displayName || user.email || 'Sincronizado' : 'Modo local'}
+              {user ? user.displayName || user.email || 'Synced' : 'Local mode'}
             </span>
           </div>
         </div>
@@ -294,7 +294,7 @@ export function App() {
               disabled={refreshingAll}
               onClick={handleRefreshAll}
             >
-              {refreshingAll ? 'A atualizar...' : 'Atualizar todas'}
+              {refreshingAll ? 'Refreshing...' : 'Refresh all'}
             </button>
           )}
           <button
@@ -302,7 +302,7 @@ export function App() {
             className="icon-btn"
             onClick={() => setSettingsOpen(true)}
           >
-            Definições
+            Settings
           </button>
         </div>
       </header>
@@ -320,22 +320,22 @@ export function App() {
 
       {parcels.length === 0 ? (
         <section className="empty-state">
-          <h2>Ainda sem encomendas</h2>
+          <h2>No parcels yet</h2>
           <p>
-            Cola um código da CTT, DPD, InPost, DHL, GLS ou UPS no campo acima para começar a acompanhar a tua primeira entrega.
+            Paste a tracking number from CTT, DPD, InPost, DHL, GLS, or UPS above to start tracking your first delivery.
           </p>
         </section>
       ) : (
         <>
           <div className="filter-bar">
-            <div className="filter-pills" role="group" aria-label="Filtrar encomendas">
+            <div className="filter-pills" role="group" aria-label="Filter parcels">
               <button
                 type="button"
                 className="filter-pill"
                 aria-pressed={filter === 'all'}
                 onClick={() => setFilter('all')}
               >
-                Todas ({parcels.length})
+                All ({parcels.length})
               </button>
               <button
                 type="button"
@@ -343,7 +343,7 @@ export function App() {
                 aria-pressed={filter === 'active'}
                 onClick={() => setFilter('active')}
               >
-                A chegar ({activeParcels.length})
+                Arriving ({activeParcels.length})
               </button>
               <button
                 type="button"
@@ -351,16 +351,16 @@ export function App() {
                 aria-pressed={filter === 'delivered'}
                 onClick={() => setFilter('delivered')}
               >
-                Entregues ({deliveredParcels.length})
+                Delivered ({deliveredParcels.length})
               </button>
             </div>
           </div>
 
-          <section className="parcel-list" aria-label="Lista de encomendas">
+          <section className="parcel-list" aria-label="Parcel list">
             {visibleParcels.length === 0 ? (
               <div className="empty-state">
-                <h2>Nada neste filtro</h2>
-                <p>Alterna para &ldquo;Todas&rdquo; para ver o resto das tuas encomendas.</p>
+                <h2>Nothing in this view</h2>
+                <p>Switch back to &ldquo;All&rdquo; to view the rest of your parcels.</p>
               </div>
             ) : (
               visibleParcels.map((parcel) => (

@@ -66,7 +66,7 @@ export default {
 
       const trackingNumber = body?.trackingNumber?.trim();
       if (!trackingNumber || !/^[A-Za-z0-9_-]{4,64}$/.test(trackingNumber)) {
-        return jsonResponse({ error: 'Código de tracking inválido.' }, env, 400);
+        return jsonResponse({ error: 'Invalid tracking number.' }, env, 400);
       }
 
       const carrier: CarrierId =
@@ -120,12 +120,12 @@ export default {
             status: 'pending',
             etaIso: null,
             etaWindow: null,
-            lastLocation: 'Consulta direta indisponível — usa o botão "Abrir na transportadora"',
+            lastLocation: 'Direct lookup unavailable — use "Open carrier page"',
             events: [
               {
                 timestamp: new Date().toISOString(),
                 description:
-                  'Encomenda guardada. Esta transportadora não tem API pública gratuita — abre o link oficial para ver o detalhe.',
+                  'Parcel saved. This carrier has no free public API — open the official tracking page for full details.',
               },
             ],
           },
@@ -133,7 +133,7 @@ export default {
           200,
         );
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Erro ao consultar transportadora';
+        const message = err instanceof Error ? err.message : 'Carrier lookup failed';
         // Never block saving the parcel when a carrier endpoint rejects direct queries (e.g. HTTP 520/403)
         return jsonResponse(
           {
@@ -141,11 +141,11 @@ export default {
             status: 'pending',
             etaIso: null,
             etaWindow: null,
-            lastLocation: `Consulta direta indisponível (${message})`,
+            lastLocation: `Direct lookup unavailable (${message})`,
             events: [
               {
                 timestamp: new Date().toISOString(),
-                description: `Encomenda guardada. A consulta direta falhou (${message}) — usa "Abrir na transportadora" para ver o estado oficial.`,
+                description: `Parcel saved. Direct lookup failed (${message}) — use "Open carrier page" to view official tracking.`,
               },
             ],
           },
