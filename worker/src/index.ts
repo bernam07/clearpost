@@ -159,12 +159,17 @@ export default {
         {
           updatedAt: new Date().toISOString(),
           next: {
-            etaHeadline: 'Chega hoje · 14h–18h',
-            label: 'Liga este endpoint ao teu Firestore ou KV para sincronizar em tempo real',
+            etaHeadline: 'Arriving today · 14:00–18:00',
+            label: 'Connect this endpoint to Firestore or KV for real-time widget sync',
           },
         },
         env,
       );
+    }
+
+    // 17TRACK Package Webhook receiver (v2.2 / v2.4)
+    if (request.method === 'POST' && url.pathname === '/api/webhook') {
+      return jsonResponse({ received: true }, env, 200);
     }
 
     return jsonResponse({ error: 'Not found' }, env, 404);

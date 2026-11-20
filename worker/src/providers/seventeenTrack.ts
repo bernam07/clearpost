@@ -95,48 +95,69 @@ export async function lookupWith17Track(
   }
 
   // 1. Ensure parcel is registered in 17TRACK (idempotent if already registered)
-  await fetch('https://api.17track.net/track/v2.2/register', {
+  const regRes = await fetch('https://api.17track.net/track/v2.2/register', {
     method: 'POST',
     headers,
     body: JSON.stringify([payloadItem]),
   });
+  const regJson = (await regRes.json().catch(() => null)) as {
+    data?: { accepted?: Array<unknown> };
+  } | null;
+  const newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
 
-  // 2. Fetch latest tracking info
-  const infoRes = await fetch('https://api.17track.net/track/v2.2/gettrackinfo', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify([{ number: trackingNumber }]),
-  });
-
-  if (!infoRes.ok) {
-    throw new Error(`17TRACK HTTP ${infoRes.status}`);
+  // If just registered for the first time, give 17TRACK 2.5s to pull initial events from the carrier
+  if (newlyRegistered) {
+    await new Promise((resolve) => setTimeout(resolve, 2500));
   }
 
-  const json = (await infoRes.json()) as {
-    data?: {
-      accepted?: Array<{
-        carrier?: number;
-        track_info?: {
-          latest_status?: { status?: string };
-          time_metrics?: { estimated_delivery_date?: { from?: string; to?: string } };
-          latest_event?: { location?: string };
-          tracking?: {
-            providers?: Array<{
-              events?: Array<{
-                time_iso?: string;
-                description?: string;
-                location?: string;
+  // 2. Fetch latest tracking info
+  const fetchInfo = async () => {
+    const infoRes = await fetch('https://api.17track.net/track/v2.2/gettrackinfo', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify([{ number: trackingNumber }]),
+    });
+
+    if (!infoRes.ok) {
+      throw new Error(`17TRACK HTTP ${infoRes.status}`);
+    }
+
+    return (await infoRes.json()) as {
+      data?: {
+        accepted?: Array<{
+          carrier?: number;
+          track_info?: {
+            latest_status?: { status?: string };
+            time_metrics?: { estimated_delivery_date?: { from?: string; to?: string } };
+            latest_event?: { location?: string; description?: string; time_iso?: string };
+            tracking?: {
+              providers?: Array<{
+                events?: Array<{
+                  time_iso?: string;
+                  description?: string;
+                  location?: string;
+                }>;
               }>;
-            }>;
+            };
           };
-        };
-      }>;
+        }>;
+      };
     };
   };
 
-  const accepted = json.data?.accepted?.[0];
-  const info = accepted?.track_info;
-  const rawEvents = info?.tracking?.providers?.[0]?.events ?? [];
+  let json = await fetchInfo();
+  let accepted = json.data?.accepted?.[0];
+  let info = accepted?.track_info;
+  let rawEvents = info?.tracking?.providers?.[0]?.events ?? [];
+
+  // Second quick poll if 17TRACK is still finishing the first crawl
+  if (newlyRegistered && rawEvents.length === 0) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    json = await fetchInfo();
+    accepted = json.data?.accepted?.[0];
+    info = accepted?.track_info;
+    rawEvents = info?.tracking?.providers?.[0]?.events ?? [];
+  }
 
   const etaFrom = info?.time_metrics?.estimated_delivery_date?.from ?? null;
   const etaTo = info?.time_metrics?.estimated_delivery_date?.to ?? null;
