@@ -28,28 +28,73 @@ export interface NormalizedTracking {
   }>;
 }
 
-const CARRIER_TO_17TRACK: Partial<Record<CarrierId, number>> = {
-  ctt: 16041,
-  dpd: 100010,
-  inpost: 100226,
-  dhl: 100001,
-  gls: 100005,
-  ups: 100002,
-  correos: 100112,
+// Verified against https://res.17track.net/asset/carrier/info/apicarrier.all.json
+const CODE_TO_CARRIER: Record<number, CarrierId> = {
+  // CTT
+  16101: 'ctt',
+  100114: 'ctt',
+  // DPD & BRT Bartolini
+  100204: 'dpd',
+  101108: 'dpd',
+  100007: 'dpd',
+  100010: 'dpd',
+  100072: 'dpd',
+  100026: 'dpd',
+  // InPost
+  100598: 'inpost',
+  100594: 'inpost',
+  100043: 'inpost',
+  100469: 'inpost',
+  100462: 'inpost',
+  // DHL
+  100001: 'dhl',
+  7041: 'dhl',
+  7047: 'dhl',
+  7048: 'dhl',
+  101266: 'dhl',
+  100047: 'dhl',
+  100392: 'dhl',
+  100430: 'dhl',
+  100226: 'dhl',
+  // GLS
+  100005: 'gls',
+  100316: 'gls',
+  100646: 'gls',
+  101109: 'gls',
+  100189: 'gls',
+  // UPS
+  100002: 'ups',
+  100398: 'ups',
+  // Correos
+  100048: 'correos',
+  19181: 'correos',
 };
 
-const CODE_TO_CARRIER: Record<number, CarrierId> = {
-  16041: 'ctt',
-  100010: 'dpd',
-  100026: 'dpd', // BRT Italy (DPD Group)
-  100226: 'inpost',
-  100001: 'dhl',
-  7041: 'dhl',   // DHL Parcel / eCommerce (JJD...)
-  7042: 'dhl',
-  100005: 'gls',
-  100002: 'ups',
-  100112: 'correos',
-};
+function resolve17TrackCarrierCode(
+  trackingNumber: string,
+  carrierHint?: CarrierId,
+): number | undefined {
+  const code = trackingNumber.trim().toUpperCase();
+
+  if (carrierHint === 'ctt') {
+    return /^[A-Z]{2}\d{9}PT$/.test(code) ? 16101 : 100114;
+  }
+  if (carrierHint === 'dpd') {
+    // 18-digit numbers are BRT Bartolini Italy (100026)
+    return /^\d{18}$/.test(code) ? 100026 : undefined;
+  }
+  if (carrierHint === 'inpost') {
+    return 100598;
+  }
+  if (carrierHint === 'correos') {
+    return 100048;
+  }
+  if (carrierHint === 'ups') {
+    return 100002;
+  }
+  // For DHL, GLS, 14-digit DPD, and unknown, let 17TRACK auto-detect the regional subcarrier
+  return undefined;
+}
 
 function map17TrackStatus(stage?: string): ParcelStatus {
   switch (stage) {
@@ -62,6 +107,8 @@ function map17TrackStatus(stage?: string): ParcelStatus {
       return 'in_transit';
     case 'Exception':
     case 'DeliveryFailure':
+    case 'Undelivered':
+    case 'Alert':
     case 'Expired':
       return 'exception';
     case 'NotFound':
@@ -71,9 +118,28 @@ function map17TrackStatus(stage?: string): ParcelStatus {
   }
 }
 
+interface Track17Event {
+  time_iso?: string;
+  description?: string;
+  location?: string;
+}
+
+interface Track17AcceptedItem {
+  carrier?: number;
+  track_info?: {
+    latest_status?: { status?: string; sub_status?: string };
+    time_metrics?: { estimated_delivery_date?: { from?: string; to?: string } };
+    latest_event?: Track17Event | null;
+    tracking?: {
+      providers?: Array<{
+        events?: Track17Event[];
+      }>;
+    };
+  };
+}
+
 /**
  * Calls 17TRACK v2.2 (register + gettrackinfo) with automatic carrier detection.
- * Docs: https://api.17track.net/en/doc
  */
 export async function lookupWith17Track(
   apiKey: string,
@@ -82,107 +148,112 @@ export async function lookupWith17Track(
 ): Promise<NormalizedTracking> {
   const headers = {
     'Content-Type': 'application/json',
-    '17token': apiKey,
+    '17token': apiKey.trim(),
   };
 
-  const payloadItem: Record<string, unknown> = { number: trackingNumber };
-  const isBrt18 = carrierHint === 'dpd' && /^\d{18}$/.test(trackingNumber.trim());
-
-  if (isBrt18) {
-    // 18-digit DPD/BRT Italy numbers require explicit BRT Bartolini code (100026) in 17TRACK
-    payloadItem.carrier = 100026;
-  } else if (carrierHint && carrierHint !== 'unknown' && carrierHint !== 'dhl') {
-    const mappedCode = CARRIER_TO_17TRACK[carrierHint];
-    if (mappedCode) payloadItem.carrier = mappedCode;
+  const explicitCarrier = resolve17TrackCarrierCode(trackingNumber, carrierHint);
+  const registerPayload: Record<string, unknown> = { number: trackingNumber };
+  if (explicitCarrier) {
+    registerPayload.carrier = explicitCarrier;
   }
 
-  // 1. Ensure parcel is registered in 17TRACK (idempotent if already registered)
+  // 1. Register tracking number in 17TRACK
   const regRes = await fetch('https://api.17track.net/track/v2.2/register', {
     method: 'POST',
     headers,
-    body: JSON.stringify([payloadItem]),
+    body: JSON.stringify([registerPayload]),
   });
-  const regJson = (await regRes.json().catch(() => null)) as {
-    data?: { accepted?: Array<unknown>; rejected?: Array<{ error?: { code?: number } }> };
-  } | null;
-  const newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
 
-  // If 18-digit BRT was already registered earlier without carrier 100026, update its carrier
-  if (isBrt18 && !newlyRegistered) {
+  const regJson = (await regRes.json().catch(() => null)) as {
+    data?: {
+      accepted?: Array<{ carrier?: number }>;
+      rejected?: Array<{ error?: { code?: number; message?: string } }>;
+    };
+  } | null;
+
+  const newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
+  const rejectCode = regJson?.data?.rejected?.[0]?.error?.code;
+
+  // Code -18019901 means already registered; if we have an explicit carrier (like BRT 100026), ensure carrier matches
+  if (!newlyRegistered && explicitCarrier && rejectCode === -18019901) {
     await fetch('https://api.17track.net/track/v2.2/changecarrier', {
       method: 'POST',
       headers,
-      body: JSON.stringify([{ number: trackingNumber, carrier_new: 100026 }]),
+      body: JSON.stringify([{ number: trackingNumber, carrier_new: explicitCarrier }]),
     }).catch(() => null);
   }
 
-  // If just registered for the first time, give 17TRACK 2.5s to pull initial events from the carrier
   if (newlyRegistered) {
     await new Promise((resolve) => setTimeout(resolve, 2500));
   }
 
-  // 2. Fetch latest tracking info
-  const fetchInfo = async () => {
+  const fetchInfo = async (): Promise<Track17AcceptedItem | undefined> => {
+    const queryItem: Record<string, unknown> = { number: trackingNumber };
     const infoRes = await fetch('https://api.17track.net/track/v2.2/gettrackinfo', {
       method: 'POST',
       headers,
-      body: JSON.stringify([{ number: trackingNumber }]),
+      body: JSON.stringify([queryItem]),
     });
 
     if (!infoRes.ok) {
       throw new Error(`17TRACK HTTP ${infoRes.status}`);
     }
 
-    return (await infoRes.json()) as {
-      data?: {
-        accepted?: Array<{
-          carrier?: number;
-          track_info?: {
-            latest_status?: { status?: string };
-            time_metrics?: { estimated_delivery_date?: { from?: string; to?: string } };
-            latest_event?: { location?: string; description?: string; time_iso?: string };
-            tracking?: {
-              providers?: Array<{
-                events?: Array<{
-                  time_iso?: string;
-                  description?: string;
-                  location?: string;
-                }>;
-              }>;
-            };
-          };
-        }>;
-      };
+    const json = (await infoRes.json()) as {
+      data?: { accepted?: Track17AcceptedItem[] };
     };
+    return json.data?.accepted?.[0];
   };
 
-  let json = await fetchInfo();
-  let accepted = json.data?.accepted?.[0];
+  let accepted = await fetchInfo();
   let info = accepted?.track_info;
-  let rawEvents = info?.tracking?.providers?.[0]?.events ?? [];
+  let rawEvents: Track17Event[] =
+    info?.tracking?.providers?.flatMap((p) => p.events ?? []) ?? [];
 
-  // Second quick poll if 17TRACK is still finishing the first crawl
   if (newlyRegistered && rawEvents.length === 0) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    json = await fetchInfo();
-    accepted = json.data?.accepted?.[0];
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    accepted = await fetchInfo();
     info = accepted?.track_info;
-    rawEvents = info?.tracking?.providers?.[0]?.events ?? [];
+    rawEvents = info?.tracking?.providers?.flatMap((p) => p.events ?? []) ?? [];
+  }
+
+  if (rawEvents.length === 0 && info?.latest_event?.description) {
+    rawEvents = [info.latest_event];
   }
 
   const etaFrom = info?.time_metrics?.estimated_delivery_date?.from ?? null;
   const etaTo = info?.time_metrics?.estimated_delivery_date?.to ?? null;
+  const resolvedCarrier =
+    (accepted?.carrier && CODE_TO_CARRIER[accepted.carrier]) || carrierHint || 'unknown';
+  const status = map17TrackStatus(info?.latest_status?.status);
+
+  const events =
+    rawEvents.length > 0
+      ? rawEvents.slice(0, 50).map((ev) => ({
+          timestamp: ev.time_iso ?? new Date().toISOString(),
+          description: ev.description ?? 'Status update',
+          location: ev.location || undefined,
+        }))
+      : [
+          {
+            timestamp: new Date().toISOString(),
+            description:
+              info?.latest_status?.status === 'NotFound'
+                ? 'Registered with 17TRACK — waiting for the carrier to publish tracking events (or click "Open carrier page").'
+                : 'Registered with 17TRACK — syncing initial carrier events.',
+          },
+        ];
 
   return {
-    carrier: (accepted?.carrier && CODE_TO_CARRIER[accepted.carrier]) || carrierHint || 'unknown',
-    status: map17TrackStatus(info?.latest_status?.status),
+    carrier: resolvedCarrier,
+    status,
     etaIso: etaFrom,
-    etaWindow: etaFrom && etaTo && etaFrom !== etaTo ? `${etaFrom.slice(0, 10)} – ${etaTo.slice(0, 10)}` : null,
-    lastLocation: info?.latest_event?.location ?? rawEvents[0]?.location ?? null,
-    events: rawEvents.slice(0, 50).map((ev) => ({
-      timestamp: ev.time_iso ?? new Date().toISOString(),
-      description: ev.description ?? 'Atualização de estado',
-      location: ev.location || undefined,
-    })),
+    etaWindow:
+      etaFrom && etaTo && etaFrom !== etaTo ? `${etaFrom.slice(0, 10)} – ${etaTo.slice(0, 10)}` : null,
+    lastLocation:
+      info?.latest_event?.location ??
+      rawEvents[0]?.location ??
+      (rawEvents.length === 0 ? 'Synced via 17TRACK (waiting for carrier scans)' : null),
+    events,
   };
 }
