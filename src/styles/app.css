@@ -8,19 +8,22 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   min-height: 100%;
-  background-color: var(--canvas-end);
-  background-image:
-    radial-gradient(ellipse 130% 48% at 50% 0%, var(--skylight) 0%, transparent 100%),
-    linear-gradient(180deg, var(--canvas-top) 0%, var(--canvas-mid) 48%, var(--canvas-end) 100%);
-  background-repeat: no-repeat;
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  background-color: var(--canvas);
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
   font-family: var(--font-sans);
   color: var(--ink);
-  background: transparent;
+  background-color: var(--canvas);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -142,7 +145,7 @@ select {
   border: 0;
   background: transparent;
   padding: 8px 0;
-  font-size: 0.94rem;
+  font-size: 1rem;
   outline: none;
 }
 
@@ -700,13 +703,15 @@ select {
   gap: 6px;
 }
 
-.ghost-btn {
+.ghost-btn,
+.ghost-btn:visited {
   display: inline-flex;
   align-items: center;
   padding: 5px 10px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--glass-thin-border);
   background: var(--glass-chip-bg);
+  color: var(--ink);
   font-size: 0.78rem;
   font-weight: 500;
   text-decoration: none;

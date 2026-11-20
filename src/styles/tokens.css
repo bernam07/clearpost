@@ -11,12 +11,8 @@
     color-scheme: light;
   }
 
-  /* Atmosphere canvas — seamless architectural gradient (zero WebKit blur-tile seams) */
-  --canvas: light-dark(#e8eff7, #0a121b);
-  --canvas-top: light-dark(#f0f6fc, #0f1c2c);
-  --canvas-mid: light-dark(#e4edf7, #0a131e);
-  --canvas-end: light-dark(#dce7f4, #080f17);
-  --skylight: light-dark(rgba(154, 200, 244, 0.38), rgba(56, 132, 206, 0.22));
+  /* Solid architectural canvas — zero 8-bit OLED banding or tile cuts on mobile */
+  --canvas: light-dark(#eaf0f7, #0a111a);
 
   /* Clear Glass material hierarchy (Thick Hero > Deck > Thin List) */
   --glass-hero-bg: light-dark(rgba(255, 255, 255, 0.56), rgba(20, 32, 46, 0.52));

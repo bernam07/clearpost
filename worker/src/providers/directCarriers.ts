@@ -32,7 +32,7 @@ export async function lookupDirectDPD(trackingNumber: string): Promise<Normalize
   );
 
   if (!res.ok) {
-    throw new Error(`DPD devolveu HTTP ${res.status}`);
+    throw new Error(`DPD returned HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as {
@@ -88,7 +88,7 @@ export async function lookupDirectInPost(trackingNumber: string): Promise<Normal
   );
 
   if (!res.ok) {
-    throw new Error(`InPost devolveu HTTP ${res.status}`);
+    throw new Error(`InPost returned HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as {
@@ -130,13 +130,13 @@ export async function lookupDirectDHL(
     {
       headers: {
         Accept: 'application/json',
-        'DHL-API-Key': apiKey,
+        'DHL-API-Key': apiKey.trim(),
       },
     },
   );
 
   if (!res.ok) {
-    throw new Error(`DHL devolveu HTTP ${res.status}`);
+    throw new Error(`DHL returned HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as {
