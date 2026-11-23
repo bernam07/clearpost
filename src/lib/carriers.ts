@@ -108,7 +108,7 @@ export function officialTrackingUrl(carrier: CarrierId, trackingNumber: string):
       return `https://appserver.ctt.pt/CustomerArea/PublicArea_Detail?ObjectCodeInput=${code}`;
     case 'dpd':
       if (/^\d{18}$/.test(trackingNumber.trim())) {
-        return `https://www.mybrt.it/en/mybrt/my-parcels/search?parcelNumber=${code}`;
+        return `https://www.mybrt.it/it/mybrt/my-parcels/search?parcelNumber=${code}`;
       }
       return `https://tracking.dpd.de/status/en_US/parcel/${code}`;
     case 'inpost':
