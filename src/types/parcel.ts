@@ -1,6 +1,7 @@
 export type CarrierId =
   | 'ctt'
   | 'dpd'
+  | 'brt'
   | 'inpost'
   | 'dhl'
   | 'gls'

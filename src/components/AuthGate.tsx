@@ -58,7 +58,8 @@ export function AuthGate({ onContinueLocal }: AuthGateProps) {
 
         <ul className="auth-carriers" aria-label="Supported carriers">
           <li>CTT</li>
-          <li>DPD / BRT</li>
+          <li>DPD</li>
+          <li>BRT</li>
           <li>InPost</li>
           <li>DHL</li>
           <li>GLS</li>

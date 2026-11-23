@@ -1,6 +1,7 @@
 export type CarrierId =
   | 'ctt'
   | 'dpd'
+  | 'brt'
   | 'inpost'
   | 'dhl'
   | 'gls'
@@ -33,13 +34,14 @@ const CODE_TO_CARRIER: Record<number, CarrierId> = {
   // CTT
   16101: 'ctt',
   100114: 'ctt',
-  // DPD & BRT Bartolini
+  // DPD
   100204: 'dpd',
   101108: 'dpd',
   100007: 'dpd',
   100010: 'dpd',
   100072: 'dpd',
-  100026: 'dpd',
+  // BRT Bartolini Italy
+  100026: 'brt',
   // InPost
   100598: 'inpost',
   100594: 'inpost',
@@ -79,9 +81,11 @@ function resolve17TrackCarrierCode(
   if (carrierHint === 'ctt') {
     return /^[A-Z]{2}\d{9}PT$/.test(code) ? 16101 : 100114;
   }
+  if (carrierHint === 'brt') {
+    return 100026;
+  }
   if (carrierHint === 'dpd') {
-    // 18-digit numbers are BRT Bartolini Italy (100026)
-    return /^\d{18}$/.test(code) ? 100026 : undefined;
+    return 100204;
   }
   if (carrierHint === 'inpost') {
     return 100598;
@@ -175,15 +179,20 @@ export async function lookupWith17Track(
   const rejectCode = regJson?.data?.rejected?.[0]?.error?.code;
 
   // Code -18019901 means already registered; if we have an explicit carrier (like BRT 100026), ensure carrier matches
+  let changedCarrier = false;
   if (!newlyRegistered && explicitCarrier && rejectCode === -18019901) {
-    await fetch('https://api.17track.net/track/v2.2/changecarrier', {
+    const ccRes = await fetch('https://api.17track.net/track/v2.2/changecarrier', {
       method: 'POST',
       headers,
       body: JSON.stringify([{ number: trackingNumber, carrier_new: explicitCarrier }]),
     }).catch(() => null);
+    const ccJson = (await ccRes?.json().catch(() => null)) as {
+      data?: { accepted?: Array<unknown> };
+    } | null;
+    changedCarrier = (ccJson?.data?.accepted?.length ?? 0) > 0;
   }
 
-  if (newlyRegistered) {
+  if (newlyRegistered || changedCarrier) {
     await new Promise((resolve) => setTimeout(resolve, 2500));
   }
 

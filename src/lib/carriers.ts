@@ -9,13 +9,14 @@ export interface CarrierMeta {
 }
 
 export const CARRIERS: Record<CarrierId, CarrierMeta> = {
-  ctt: { id: 'ctt', name: 'CTT', color: '#d42027', hint: 'Portugal Post & CTT Express', seventeenTrackCode: 16041 },
-  dpd: { id: 'dpd', name: 'DPD / BRT', color: '#dc0032', hint: 'DPD Europe (14) & BRT Italy (18 digits)', seventeenTrackCode: 100010 },
-  inpost: { id: 'inpost', name: 'InPost', color: '#d89b00', hint: 'Parcel Lockers & Pack Points (24 digits / INP)', seventeenTrackCode: 100226 },
+  ctt: { id: 'ctt', name: 'CTT', color: '#d42027', hint: 'Portugal Post & CTT Express', seventeenTrackCode: 16101 },
+  dpd: { id: 'dpd', name: 'DPD', color: '#dc0032', hint: 'DPD Portugal & Europe (14 digits)', seventeenTrackCode: 100204 },
+  brt: { id: 'brt', name: 'BRT (Italy)', color: '#c8102e', hint: 'BRT Bartolini / DPD Italy (12, 14, or 18 digits)', seventeenTrackCode: 100026 },
+  inpost: { id: 'inpost', name: 'InPost', color: '#d89b00', hint: 'Parcel Lockers & Pack Points (24 digits / INP)', seventeenTrackCode: 100598 },
   dhl: { id: 'dhl', name: 'DHL', color: '#cc8a00', hint: 'DHL Express & DHL eCommerce', seventeenTrackCode: 100001 },
-  gls: { id: 'gls', name: 'GLS', color: '#163c8c', hint: 'GLS Europe (11–12 digits)', seventeenTrackCode: 100005 },
+  gls: { id: 'gls', name: 'GLS', color: '#163c8c', hint: 'GLS Europe (11–12 digits)', seventeenTrackCode: 100316 },
   ups: { id: 'ups', name: 'UPS', color: '#6b4214', hint: 'UPS Standard & Express (1Z…)', seventeenTrackCode: 100002 },
-  correos: { id: 'correos', name: 'Correos Express', color: '#0055a5', hint: 'Iberian shipments (16 digits)', seventeenTrackCode: 100112 },
+  correos: { id: 'correos', name: 'Correos Express', color: '#0055a5', hint: 'Iberian shipments (16 digits)', seventeenTrackCode: 100048 },
   unknown: { id: 'unknown', name: 'Other carrier', color: '#5d6b7a', hint: 'Auto-detect via proxy' },
 };
 
@@ -40,11 +41,12 @@ export function detectCarrierCandidates(rawCode: string): CarrierId[] {
   if (/^\d+$/.test(code)) {
     const len = code.length;
     if (len === 10) return ['dhl', 'gls'];
-    if (len === 11 || len === 12) return ['gls', 'dhl', 'ctt'];
+    if (len === 11) return ['gls', 'dhl', 'ctt'];
+    if (len === 12) return ['brt', 'gls', 'dhl', 'ctt'];
     if (len === 13) return ['ctt', 'dpd', 'gls'];
-    if (len === 14) return ['dpd', 'gls', 'inpost'];
+    if (len === 14) return ['dpd', 'brt', 'gls', 'inpost'];
     if (len === 16) return /^(323|633)/.test(code) ? ['correos', 'dpd'] : ['correos', 'dpd', 'dhl'];
-    if (len === 18) return ['dpd', 'dhl', 'ups'];
+    if (len === 18) return ['brt', 'dpd', 'dhl', 'ups'];
     if (len === 20 || len === 22) return ['dhl', 'inpost', 'dpd'];
     if (len === 24) return ['inpost', 'dhl'];
   }
@@ -107,10 +109,9 @@ export function officialTrackingUrl(carrier: CarrierId, trackingNumber: string):
     case 'ctt':
       return `https://appserver.ctt.pt/CustomerArea/PublicArea_Detail?ObjectCodeInput=${code}`;
     case 'dpd':
-      if (/^\d{18}$/.test(trackingNumber.trim())) {
-        return `https://www.mybrt.it/it/mybrt/my-parcels/search?parcelNumber=${code}`;
-      }
-      return `https://tracking.dpd.de/status/en_US/parcel/${code}`;
+      return `https://dpd.pt/seguir-encomenda?reference=${code}`;
+    case 'brt':
+      return `https://www.mybrt.it/it/mybrt/my-parcels/search?parcelNumber=${code}`;
     case 'inpost':
       return `https://www.inpost.pt/seguir-o-meu-envio/?number=${code}`;
     case 'dhl':
