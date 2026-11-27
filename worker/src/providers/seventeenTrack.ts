@@ -3,6 +3,7 @@ export type CarrierId =
   | 'dpd'
   | 'brt'
   | 'inpost'
+  | 'mondial_relay'
   | 'dhl'
   | 'gls'
   | 'ups'
@@ -48,6 +49,8 @@ const CODE_TO_CARRIER: Record<number, CarrierId> = {
   100043: 'inpost',
   100469: 'inpost',
   100462: 'inpost',
+  // Mondial Relay
+  100304: 'mondial_relay',
   // DHL
   100001: 'dhl',
   7041: 'dhl',
@@ -89,6 +92,9 @@ function resolve17TrackCarrierCode(
   }
   if (carrierHint === 'inpost') {
     return 100598;
+  }
+  if (carrierHint === 'mondial_relay') {
+    return 100304;
   }
   if (carrierHint === 'correos') {
     return 100048;

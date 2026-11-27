@@ -172,6 +172,7 @@ export function detectCarrierServer(code: string): CarrierId {
   const c = code.trim().toUpperCase();
   if (/^[A-Z]{2}\d{9}PT$/.test(c) || /^(DA|DB|DC|DE)\d{9,13}$/.test(c)) return 'ctt';
   if (/^\d{24}$/.test(c) || /^INP[0-9A-Z]{8,20}$/.test(c)) return 'inpost';
+  if (/^\d{8}$/.test(c)) return 'mondial_relay';
   if (/^\d{14}[A-Z]?$/.test(c) || /^\d{18}$/.test(c)) return 'dpd';
   if (/^\d{10}$/.test(c) || /^JJD\d{14,20}$/.test(c)) return 'dhl';
   if (/^1Z[0-9A-Z]{16}$/.test(c)) return 'ups';

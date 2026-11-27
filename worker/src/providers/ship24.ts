@@ -23,7 +23,8 @@ function mapShip24Courier(courierCode?: string | null, fallback?: CarrierId): Ca
   const code = (courierCode || '').toLowerCase();
   if (code.includes('ctt')) return 'ctt';
   if (code.includes('dpd')) return 'dpd';
-  if (code.includes('inpost') || code.includes('mondial')) return 'inpost';
+  if (code.includes('mondial')) return 'mondial_relay';
+  if (code.includes('inpost')) return 'inpost';
   if (code.includes('dhl')) return 'dhl';
   if (code.includes('gls')) return 'gls';
   if (code.includes('ups')) return 'ups';

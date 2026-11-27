@@ -61,6 +61,7 @@ export function AuthGate({ onContinueLocal }: AuthGateProps) {
           <li>DPD</li>
           <li>BRT</li>
           <li>InPost</li>
+          <li>Mondial Relay</li>
           <li>DHL</li>
           <li>GLS</li>
           <li>UPS</li>

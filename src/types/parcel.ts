@@ -3,6 +3,7 @@ export type CarrierId =
   | 'dpd'
   | 'brt'
   | 'inpost'
+  | 'mondial_relay'
   | 'dhl'
   | 'gls'
   | 'ups'

@@ -13,6 +13,7 @@ export const CARRIERS: Record<CarrierId, CarrierMeta> = {
   dpd: { id: 'dpd', name: 'DPD', color: '#dc0032', hint: 'DPD Portugal & Europe (14 digits)', seventeenTrackCode: 100204 },
   brt: { id: 'brt', name: 'BRT (Italy)', color: '#c8102e', hint: 'BRT Bartolini / DPD Italy (12, 14, or 18 digits)', seventeenTrackCode: 100026 },
   inpost: { id: 'inpost', name: 'InPost', color: '#d89b00', hint: 'Parcel Lockers & Pack Points (24 digits / INP)', seventeenTrackCode: 100598 },
+  mondial_relay: { id: 'mondial_relay', name: 'Mondial Relay', color: '#96154a', hint: 'Mondial Relay / Vinted (8 digits)', seventeenTrackCode: 100304 },
   dhl: { id: 'dhl', name: 'DHL', color: '#cc8a00', hint: 'DHL Express & DHL eCommerce', seventeenTrackCode: 100001 },
   gls: { id: 'gls', name: 'GLS', color: '#163c8c', hint: 'GLS Europe (11–12 digits)', seventeenTrackCode: 100316 },
   ups: { id: 'ups', name: 'UPS', color: '#6b4214', hint: 'UPS Standard & Express (1Z…)', seventeenTrackCode: 100002 },
@@ -40,6 +41,7 @@ export function detectCarrierCandidates(rawCode: string): CarrierId[] {
 
   if (/^\d+$/.test(code)) {
     const len = code.length;
+    if (len === 8) return ['mondial_relay'];
     if (len === 10) return ['dhl', 'gls'];
     if (len === 11) return ['gls', 'dhl', 'ctt'];
     if (len === 12) return ['brt', 'gls', 'dhl', 'ctt'];
@@ -114,6 +116,8 @@ export function officialTrackingUrl(carrier: CarrierId, trackingNumber: string):
       return `https://www.mybrt.it/it/mybrt/my-parcels/search?parcelNumber=${code}`;
     case 'inpost':
       return `https://www.inpost.pt/seguir-o-meu-envio/?number=${code}`;
+    case 'mondial_relay':
+      return `https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=${code}`;
     case 'dhl':
       return `https://www.dhl.com/global-en/home/tracking.html?tracking-id=${code}`;
     case 'gls':

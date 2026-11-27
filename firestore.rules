@@ -11,7 +11,7 @@ rules_version = '2';
 // Access: Strictly private to the authenticated owner (request.auth.uid == userId)
 // Fields:
 //   - trackingNumber: string (required, 1..64 chars) - Carrier tracking code
-//   - carrier: string (required, enum: 'ctt', 'dpd', 'brt', 'inpost', 'dhl', 'gls', 'ups', 'correos', 'unknown') - Carrier slug
+//   - carrier: string (required, enum: 'ctt', 'dpd', 'brt', 'inpost', 'mondial_relay', 'dhl', 'gls', 'ups', 'correos', 'unknown') - Carrier slug
 //   - label: string (required, 0..100 chars) - User-friendly parcel label
 //   - status: string (required, enum: 'pending', 'in_transit', 'out_for_delivery', 'delivered', 'exception') - Current parcel status
 //   - etaIso: string | null (optional, <= 40 chars) - Estimated delivery date/timestamp in ISO format
@@ -102,7 +102,7 @@ service cloud.firestore {
 
     function isValidCarrier(carrier) {
       return carrier is string &&
-             carrier in ['ctt', 'dpd', 'brt', 'inpost', 'dhl', 'gls', 'ups', 'correos', 'unknown'];
+             carrier in ['ctt', 'dpd', 'brt', 'inpost', 'mondial_relay', 'dhl', 'gls', 'ups', 'correos', 'unknown'];
     }
 
     function isValidStatus(status) {
