@@ -165,10 +165,10 @@ export async function lookupWith17Track(
 
   const explicitCarrier = resolve17TrackCarrierCode(trackingNumber, carrierHint);
 
-  const callRegister = async (paramValue?: string) => {
+  const callRegister = async (postalValue?: string) => {
     const payload: Record<string, unknown> = { number: trackingNumber };
     if (explicitCarrier) payload.carrier = explicitCarrier;
-    if (paramValue) payload.param = paramValue;
+    if (postalValue) payload.destination_postal_code = postalValue;
 
     const res = await fetch('https://api.17track.net/track/v2.4/register', {
       method: 'POST',
@@ -209,7 +209,7 @@ export async function lookupWith17Track(
         number: trackingNumber,
         carrier_new: explicitCarrier,
       };
-      if (postalCode) ccPayload.param = postalCode;
+      if (postalCode) ccPayload.destination_postal_code = postalCode;
       const ccRes = await fetch('https://api.17track.net/track/v2.4/changecarrier', {
         method: 'POST',
         headers,
@@ -225,7 +225,9 @@ export async function lookupWith17Track(
       await fetch('https://api.17track.net/track/v2.4/changeinfo', {
         method: 'POST',
         headers,
-        body: JSON.stringify([{ number: trackingNumber, items: { param: postalCode } }]),
+        body: JSON.stringify([
+          { number: trackingNumber, items: { destination_postal_code: postalCode } },
+        ]),
       }).catch(() => null);
       changedCarrier = true;
     }
