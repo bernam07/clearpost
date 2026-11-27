@@ -149,7 +149,8 @@ interface Track17AcceptedItem {
 }
 
 /**
- * Calls 17TRACK v2.2 (register + gettrackinfo) with automatic carrier detection.
+ * Calls 17TRACK v2.4 (register + gettrackinfo) with automatic carrier detection
+ * and `param` support (e.g. destination postal code for Mondial Relay 100304).
  */
 export async function lookupWith17Track(
   apiKey: string,
@@ -163,31 +164,42 @@ export async function lookupWith17Track(
   };
 
   const explicitCarrier = resolve17TrackCarrierCode(trackingNumber, carrierHint);
-  const registerPayload: Record<string, unknown> = { number: trackingNumber };
-  if (explicitCarrier) {
-    registerPayload.carrier = explicitCarrier;
+
+  const callRegister = async (paramValue?: string) => {
+    const payload: Record<string, unknown> = { number: trackingNumber };
+    if (explicitCarrier) payload.carrier = explicitCarrier;
+    if (paramValue) payload.param = paramValue;
+
+    const res = await fetch('https://api.17track.net/track/v2.4/register', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify([payload]),
+    });
+
+    return (await res.json().catch(() => null)) as {
+      data?: {
+        accepted?: Array<{ carrier?: number }>;
+        rejected?: Array<{ error?: { code?: number; message?: string } }>;
+      };
+    } | null;
+  };
+
+  // 1. Register tracking number in 17TRACK v2.4
+  let regJson = await callRegister(postalCode);
+  let newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
+  let rejectErr = regJson?.data?.rejected?.[0]?.error;
+  let rejectCode = rejectErr?.code;
+
+  // If rejected due to postal code format (e.g. hyphen in PT code 1000-001), retry stripped
+  if (!newlyRegistered && postalCode && rejectCode !== -18019901) {
+    const stripped = postalCode.replace(/[^A-Za-z0-9]/g, '');
+    if (stripped && stripped !== postalCode) {
+      regJson = await callRegister(stripped);
+      newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
+      rejectErr = regJson?.data?.rejected?.[0]?.error;
+      rejectCode = rejectErr?.code;
+    }
   }
-  if (postalCode) {
-    registerPayload.param = postalCode;
-  }
-
-  // 1. Register tracking number in 17TRACK (v2.2 supports param for Mondial Relay postal code)
-  const regRes = await fetch('https://api.17track.net/track/v2.2/register', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify([registerPayload]),
-  });
-
-  const regJson = (await regRes.json().catch(() => null)) as {
-    data?: {
-      accepted?: Array<{ carrier?: number }>;
-      rejected?: Array<{ error?: { code?: number; message?: string } }>;
-    };
-  } | null;
-
-  const newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
-  const rejectErr = regJson?.data?.rejected?.[0]?.error;
-  const rejectCode = rejectErr?.code;
 
   // Code -18019901 means already registered; update carrier or postal code param if supplied
   let changedCarrier = false;
@@ -198,7 +210,7 @@ export async function lookupWith17Track(
         carrier_new: explicitCarrier,
       };
       if (postalCode) ccPayload.param = postalCode;
-      const ccRes = await fetch('https://api.17track.net/track/v2.2/changecarrier', {
+      const ccRes = await fetch('https://api.17track.net/track/v2.4/changecarrier', {
         method: 'POST',
         headers,
         body: JSON.stringify([ccPayload]),
@@ -210,7 +222,7 @@ export async function lookupWith17Track(
     }
 
     if (postalCode && !changedCarrier) {
-      await fetch('https://api.17track.net/track/v2.2/changeinfo', {
+      await fetch('https://api.17track.net/track/v2.4/changeinfo', {
         method: 'POST',
         headers,
         body: JSON.stringify([{ number: trackingNumber, items: { param: postalCode } }]),
@@ -225,7 +237,9 @@ export async function lookupWith17Track(
 
   const fetchInfo = async (): Promise<Track17AcceptedItem | undefined> => {
     const queryItem: Record<string, unknown> = { number: trackingNumber };
-    const infoRes = await fetch('https://api.17track.net/track/v2.2/gettrackinfo', {
+    if (explicitCarrier) queryItem.carrier = explicitCarrier;
+
+    const infoRes = await fetch('https://api.17track.net/track/v2.4/gettrackinfo', {
       method: 'POST',
       headers,
       body: JSON.stringify([queryItem]),
