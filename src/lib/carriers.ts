@@ -117,7 +117,7 @@ export function officialTrackingUrl(carrier: CarrierId, trackingNumber: string):
     case 'inpost':
       return `https://www.inpost.pt/seguir-o-meu-envio/?number=${code}`;
     case 'mondial_relay':
-      return `https://www.mondialrelay.com/suivi-de-colis?numeroExpedition=${code}`;
+      return `https://www.mondialrelay.com/en-gb/parcel-tracking/?country=PT&exp=${code}&language=EN`;
     case 'dhl':
       return `https://www.dhl.com/global-en/home/tracking.html?tracking-id=${code}`;
     case 'gls':
