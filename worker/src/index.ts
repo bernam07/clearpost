@@ -3,6 +3,7 @@ import {
   lookupDirectDHL,
   lookupDirectDPD,
   lookupDirectInPost,
+  lookupDirectMondialRelay,
   probeFreeCarriers,
 } from './providers/directCarriers';
 import { lookupWithShip24 } from './providers/ship24';
@@ -80,6 +81,19 @@ export default {
           : detectCarrierServer(trackingNumber);
 
       try {
+        // 0. Direct Mondial Relay lookup when postal code is supplied (instant, real-time, 0 quota)
+        if (carrier === 'mondial_relay' && safePostalCode) {
+          try {
+            return jsonResponse(
+              await lookupDirectMondialRelay(trackingNumber, safePostalCode),
+              env,
+              200,
+            );
+          } catch {
+            // Fall through to 17TRACK if direct lookup fails
+          }
+        }
+
         // 1. If a multi-carrier aggregator key (17TRACK or Ship24) is configured, prefer it first!
         if (env.SEVENTEENTRACK_API_KEY) {
           return jsonResponse(

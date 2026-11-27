@@ -32,6 +32,7 @@ export interface Parcel {
   etaIso: string | null;
   etaWindow: string | null;
   lastLocation: string | null;
+  postalCode?: string | null;
   events: TrackingEvent[];
   createdAt: string;
   updatedAt: string;

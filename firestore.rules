@@ -17,6 +17,7 @@ rules_version = '2';
 //   - etaIso: string | null (optional, <= 40 chars) - Estimated delivery date/timestamp in ISO format
 //   - etaWindow: string | null (optional, <= 40 chars) - Human-readable delivery window
 //   - lastLocation: string | null (optional, <= 120 chars) - Most recent scan location
+//   - postalCode: string | null (optional, <= 16 chars) - Recipient postal code (mainly used for Mondial Relay)
 //   - events: list (required, <= 100 items) - Tracking event history
 //   - createdAt: string (required, ISO 8601 timestamp <= 40 chars, immutable on update) - Creation timestamp
 //   - updatedAt: string (required, ISO 8601 timestamp <= 40 chars) - Last update timestamp
@@ -119,6 +120,7 @@ service cloud.firestore {
                'etaIso',
                'etaWindow',
                'lastLocation',
+               'postalCode',
                'events',
                'createdAt',
                'updatedAt'
@@ -139,6 +141,7 @@ service cloud.firestore {
              isValidOptionalNullableString(data, 'etaIso', 40) &&
              isValidOptionalNullableString(data, 'etaWindow', 40) &&
              isValidOptionalNullableString(data, 'lastLocation', 120) &&
+             isValidOptionalNullableString(data, 'postalCode', 16) &&
              isValidList(data.events, 100) &&
              isValidDateString(data.createdAt) &&
              isValidDateString(data.updatedAt);

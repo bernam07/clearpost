@@ -123,6 +123,7 @@ export function App() {
         etaIso: result.etaIso,
         etaWindow: result.etaWindow,
         lastLocation: result.lastLocation,
+        ...(postalCode ? { postalCode } : {}),
         events: result.events,
         createdAt: now,
         updatedAt: now,
@@ -150,7 +151,11 @@ export function App() {
   async function handleRefreshParcel(parcel: Parcel) {
     setRefreshingId(parcel.id);
     try {
-      const result = await fetchTrackingUpdate(parcel.trackingNumber, parcel.carrier);
+      const result = await fetchTrackingUpdate(
+        parcel.trackingNumber,
+        parcel.carrier,
+        parcel.postalCode ?? undefined,
+      );
       const updated: Parcel = {
         ...parcel,
         carrier: result.carrier !== 'unknown' ? result.carrier : parcel.carrier,
@@ -179,7 +184,11 @@ export function App() {
 
     for (const parcel of targets) {
       try {
-        const result = await fetchTrackingUpdate(parcel.trackingNumber, parcel.carrier);
+        const result = await fetchTrackingUpdate(
+          parcel.trackingNumber,
+          parcel.carrier,
+          parcel.postalCode ?? undefined,
+        );
         await persistParcel({
           ...parcel,
           carrier: result.carrier !== 'unknown' ? result.carrier : parcel.carrier,
