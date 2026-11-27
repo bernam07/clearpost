@@ -4,7 +4,7 @@ import type { CarrierId } from '../types/parcel';
 
 interface AddParcelBarProps {
   busy: boolean;
-  onAdd: (trackingNumber: string, carrier: CarrierId, label: string) => Promise<void>;
+  onAdd: (trackingNumber: string, carrier: CarrierId, label: string, postalCode?: string) => Promise<void>;
   onAmbiguous: (trackingNumber: string, candidates: CarrierId[], label: string) => void;
   onNotify: (message: string) => void;
 }
@@ -13,6 +13,7 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
   const [code, setCode] = useState('');
   const [manualCarrier, setManualCarrier] = useState<CarrierId | null>(null);
   const [label, setLabel] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const trimmed = code.trim();
   const normalized = trimmed.toUpperCase().replace(/\s+/g, '');
@@ -51,9 +52,10 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
       return;
     }
 
-    await onAdd(normalized, activeCarrier, label.trim());
+    await onAdd(normalized, activeCarrier, label.trim(), postalCode.trim() || undefined);
     setCode('');
     setLabel('');
+    setPostalCode('');
     setManualCarrier(null);
   }
 
@@ -120,6 +122,18 @@ export function AddParcelBar({ busy, onAdd, onAmbiguous, onNotify }: AddParcelBa
             aria-label="Optional parcel label"
             maxLength={100}
           />
+
+          {activeCarrier === 'mondial_relay' && (
+            <input
+              className="label-input"
+              type="text"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              placeholder="Postal code (required by Mondial Relay)"
+              aria-label="Destination postal code"
+              maxLength={16}
+            />
+          )}
         </div>
       )}
     </form>

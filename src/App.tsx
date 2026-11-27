@@ -104,10 +104,15 @@ export function App() {
     }
   }
 
-  async function handleAddParcel(trackingNumber: string, carrier: CarrierId, label: string) {
+  async function handleAddParcel(
+    trackingNumber: string,
+    carrier: CarrierId,
+    label: string,
+    postalCode?: string,
+  ) {
     setAdding(true);
     try {
-      const result = await fetchTrackingUpdate(trackingNumber, carrier);
+      const result = await fetchTrackingUpdate(trackingNumber, carrier, postalCode);
       const now = new Date().toISOString();
       const parcel: Parcel = {
         id: crypto.randomUUID(),

@@ -62,12 +62,17 @@ export default {
       const body = (await request.json().catch(() => null)) as {
         trackingNumber?: string;
         carrier?: CarrierId;
+        postalCode?: string;
       } | null;
 
       const trackingNumber = body?.trackingNumber?.trim();
       if (!trackingNumber || !/^[A-Za-z0-9_-]{4,64}$/.test(trackingNumber)) {
         return jsonResponse({ error: 'Invalid tracking number.' }, env, 400);
       }
+
+      const postalCode = body?.postalCode?.trim();
+      const safePostalCode =
+        postalCode && /^[A-Za-z0-9 -]{3,16}$/.test(postalCode) ? postalCode : undefined;
 
       const carrier: CarrierId =
         body?.carrier && body.carrier !== 'unknown'
@@ -78,7 +83,12 @@ export default {
         // 1. If a multi-carrier aggregator key (17TRACK or Ship24) is configured, prefer it first!
         if (env.SEVENTEENTRACK_API_KEY) {
           return jsonResponse(
-            await lookupWith17Track(env.SEVENTEENTRACK_API_KEY, trackingNumber, carrier),
+            await lookupWith17Track(
+              env.SEVENTEENTRACK_API_KEY,
+              trackingNumber,
+              carrier,
+              safePostalCode,
+            ),
             env,
             200,
           );

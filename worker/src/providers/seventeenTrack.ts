@@ -155,6 +155,7 @@ export async function lookupWith17Track(
   apiKey: string,
   trackingNumber: string,
   carrierHint?: CarrierId,
+  postalCode?: string,
 ): Promise<NormalizedTracking> {
   const headers = {
     'Content-Type': 'application/json',
@@ -166,8 +167,11 @@ export async function lookupWith17Track(
   if (explicitCarrier) {
     registerPayload.carrier = explicitCarrier;
   }
+  if (postalCode) {
+    registerPayload.param = postalCode;
+  }
 
-  // 1. Register tracking number in 17TRACK
+  // 1. Register tracking number in 17TRACK (v2.2 supports param for Mondial Relay postal code)
   const regRes = await fetch('https://api.17track.net/track/v2.2/register', {
     method: 'POST',
     headers,
@@ -182,20 +186,37 @@ export async function lookupWith17Track(
   } | null;
 
   const newlyRegistered = (regJson?.data?.accepted?.length ?? 0) > 0;
-  const rejectCode = regJson?.data?.rejected?.[0]?.error?.code;
+  const rejectErr = regJson?.data?.rejected?.[0]?.error;
+  const rejectCode = rejectErr?.code;
 
-  // Code -18019901 means already registered; if we have an explicit carrier (like BRT 100026), ensure carrier matches
+  // Code -18019901 means already registered; update carrier or postal code param if supplied
   let changedCarrier = false;
-  if (!newlyRegistered && explicitCarrier && rejectCode === -18019901) {
-    const ccRes = await fetch('https://api.17track.net/track/v2.2/changecarrier', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify([{ number: trackingNumber, carrier_new: explicitCarrier }]),
-    }).catch(() => null);
-    const ccJson = (await ccRes?.json().catch(() => null)) as {
-      data?: { accepted?: Array<unknown> };
-    } | null;
-    changedCarrier = (ccJson?.data?.accepted?.length ?? 0) > 0;
+  if (!newlyRegistered && rejectCode === -18019901) {
+    if (explicitCarrier) {
+      const ccPayload: Record<string, unknown> = {
+        number: trackingNumber,
+        carrier_new: explicitCarrier,
+      };
+      if (postalCode) ccPayload.param = postalCode;
+      const ccRes = await fetch('https://api.17track.net/track/v2.2/changecarrier', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify([ccPayload]),
+      }).catch(() => null);
+      const ccJson = (await ccRes?.json().catch(() => null)) as {
+        data?: { accepted?: Array<unknown> };
+      } | null;
+      changedCarrier = (ccJson?.data?.accepted?.length ?? 0) > 0;
+    }
+
+    if (postalCode && !changedCarrier) {
+      await fetch('https://api.17track.net/track/v2.2/changeinfo', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify([{ number: trackingNumber, items: { param: postalCode } }]),
+      }).catch(() => null);
+      changedCarrier = true;
+    }
   }
 
   if (newlyRegistered || changedCarrier) {
@@ -242,6 +263,13 @@ export async function lookupWith17Track(
     (accepted?.carrier && CODE_TO_CARRIER[accepted.carrier]) || carrierHint || 'unknown';
   const status = map17TrackStatus(info?.latest_status?.status);
 
+  const emptyHint =
+    rejectErr?.message && rejectCode !== -18019901
+      ? `17TRACK: ${rejectErr.message}`
+      : info?.latest_status?.status === 'NotFound'
+        ? 'Registered with 17TRACK — waiting for the carrier to publish tracking events (or click "Open carrier page").'
+        : 'Registered with 17TRACK — syncing initial carrier events.';
+
   const events =
     rawEvents.length > 0
       ? rawEvents.slice(0, 50).map((ev) => ({
@@ -252,10 +280,7 @@ export async function lookupWith17Track(
       : [
           {
             timestamp: new Date().toISOString(),
-            description:
-              info?.latest_status?.status === 'NotFound'
-                ? 'Registered with 17TRACK — waiting for the carrier to publish tracking events (or click "Open carrier page").'
-                : 'Registered with 17TRACK — syncing initial carrier events.',
+            description: emptyHint,
           },
         ];
 

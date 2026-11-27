@@ -40,6 +40,7 @@ export interface TrackingLookupResult {
 export async function fetchTrackingUpdate(
   trackingNumber: string,
   carrierHint: CarrierId,
+  postalCode?: string,
 ): Promise<TrackingLookupResult> {
   const proxyUrl = getProxyUrl();
 
@@ -50,6 +51,7 @@ export async function fetchTrackingUpdate(
       body: JSON.stringify({
         trackingNumber: trackingNumber.trim(),
         carrier: carrierHint === 'unknown' ? undefined : carrierHint,
+        postalCode: postalCode?.trim() || undefined,
       }),
     });
 
