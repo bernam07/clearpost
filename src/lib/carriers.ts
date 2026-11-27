@@ -115,7 +115,7 @@ export function officialTrackingUrl(carrier: CarrierId, trackingNumber: string):
     case 'brt':
       return `https://www.mybrt.it/it/mybrt/my-parcels/search?parcelNumber=${code}`;
     case 'inpost':
-      return `https://www.inpost.pt/seguir-o-meu-envio/?number=${code}`;
+      return `https://www.inpost.pt/seguimento-do-envio?number=${code}`;
     case 'mondial_relay':
       return `https://www.mondialrelay.com/en-gb/parcel-tracking/?country=PT&exp=${code}&language=EN`;
     case 'dhl':
